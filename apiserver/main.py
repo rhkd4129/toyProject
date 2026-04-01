@@ -13,4 +13,10 @@ def read_item(item_id: int, q: str | None = None):
     return {"item_id": item_id, "q": q}
 
 
-# fastapi dev
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8084)
+
+
+    # fastapi dev
+# uvicorn main:app --port 8084
