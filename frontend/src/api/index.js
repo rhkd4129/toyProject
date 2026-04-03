@@ -15,12 +15,22 @@ export async function createPost(newPost){
         throw error;
     }
 }
-export async  function fetchPosts(){
+export async function fetchPosts(){
     try{
-        const response = await apiClient.post("/posts",{"newPost":newPost})
+        const response = await apiClient.get("/post/list")
         return response.data
     }catch (error){
-        console.error('Error create post:', error);
+        console.error('Error fetching posts:', error);
+        throw error;
+    }
+}
+
+export async function fetchPost(id){
+    try{
+        const response = await apiClient.get(`/post/list/${id}`)
+        return response.data
+    }catch (error){
+        console.error('Error fetching post:', error);
         throw error;
     }
 }

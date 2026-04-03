@@ -1,52 +1,33 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Home from '@pages/HomePage.vue'
 import PdfPage from "@pages/PdfPage.vue";
 import HomePage from "@pages/HomePage.vue";
-const routes = [
 
+const routes = [
     {
         path: '/',
         name: 'homePage',
-        component:HomePage
-        // component: () => import('../views/HomeView.vue')  // lazy loading으로 변경
+        component: HomePage
     },
-    // {
-    //
-    //     path: '/post/create',
-    //     name: 'postCreate',
-    //     // component: postForm,
-    //     component: () => import('@/components/post/postForm.vue'), // lazy loading으로 변경
-    //     props:{edit:false},
-    //     meta: {
-    //         requiresAuth: true  // 인증이 필요한 페이지임을 표시
-    //     },
-    // },
-    // {
-    //     path: '/post/:id',
-    //     name: 'post',
-    //     component: () => import('@/components/post/post.vue'), // lazy loading으로 변경
-    //     // component: post,post
-    //     // meta: {
-    //     //     requiresAuth: true  // 인증이 필요한 페이지임을 표시
-    //     // },
-    // },
-    // {
-    //
-    //     path: '/post/edit/:id',
-    //     name: 'postEdit',
-    //     component: postForm,
-    //     props:{edit:true},
-    //     meta: {
-    //         requiresAuth: true  // 인증이 필요한 페이지임을 표시
-    //     },
-    // },
+    {
+        path: '/posts',
+        name: 'posts',
+        component: () => import('@pages/PostsPage.vue')
+    },
+    {
+        path: '/post/:id',
+        name: 'post',
+        component: () => import('@pages/PostPage.vue')
+    },
+    {
+        path: '/post/create',
+        name: 'postCreate',
+        component: () => import('@pages/PostFormPage.vue')
+    },
     {
         path: '/pdf/upload',
         name: 'pdfPage',
-        component:PdfPage
-        // component: () => import('../views/HomeView.vue')  // lazy loading으로 변경
+        component: PdfPage
     }
-
 ]
 
 const router = createRouter({

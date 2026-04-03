@@ -1,5 +1,4 @@
-import {createPost, fetchPosts} from "@api";
-import store from "@/store/index.js";
+import {createPost, fetchPosts, fetchPost} from "@api";
 
 const postStore = {
     namespaced:true,
@@ -10,23 +9,23 @@ const postStore = {
     getters:{
         posts(state){return state.posts},
         post(state){return state.post}
-
     },
     mutations:{
         setPosts(state,posts){state.posts = posts},
         setPost(state,post){state.post = post}
-
     },
     actions:{
-        async loadPosts({state,commit}){
+        async loadPosts({commit}){
             const posts = await fetchPosts()
-            commit('postStore/setPosts',posts)
-
+            commit('setPosts', posts)
         },
-        async addPost({state},newPost) {
+        async loadPost({commit}, id){
+            const post = await fetchPost(id)
+            commit('setPost', post)
+        },
+        async addPost({state}, newPost) {
             const result = await createPost(newPost)
         }
-
     }
 }
 
