@@ -1,8 +1,8 @@
-import post from '@/store/post.js'
+import postStore from '@/store/post.js'
 import { createStore } from "vuex";
 const store = createStore({
     modules: {
-        post
+        postStore
     }
 })
 export default store

@@ -10,13 +10,41 @@ const routes = [
         component:HomePage
         // component: () => import('../views/HomeView.vue')  // lazy loading으로 변경
     },
+    // {
+    //
+    //     path: '/post/create',
+    //     name: 'postCreate',
+    //     // component: postForm,
+    //     component: () => import('@/components/post/postForm.vue'), // lazy loading으로 변경
+    //     props:{edit:false},
+    //     meta: {
+    //         requiresAuth: true  // 인증이 필요한 페이지임을 표시
+    //     },
+    // },
+    // {
+    //     path: '/post/:id',
+    //     name: 'post',
+    //     component: () => import('@/components/post/post.vue'), // lazy loading으로 변경
+    //     // component: post,post
+    //     // meta: {
+    //     //     requiresAuth: true  // 인증이 필요한 페이지임을 표시
+    //     // },
+    // },
+    // {
+    //
+    //     path: '/post/edit/:id',
+    //     name: 'postEdit',
+    //     component: postForm,
+    //     props:{edit:true},
+    //     meta: {
+    //         requiresAuth: true  // 인증이 필요한 페이지임을 표시
+    //     },
+    // },
     {
         path: '/pdf/upload',
         name: 'pdfPage',
         component:PdfPage
         // component: () => import('../views/HomeView.vue')  // lazy loading으로 변경
-
-
     }
 
 ]
