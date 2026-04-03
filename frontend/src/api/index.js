@@ -1,6 +1,6 @@
 import axios from 'axios';
 export const apiClient  = axios.create({
-    baseURL: 'http://localhost:8085/api',
+    baseURL: import.meta.env.VITE_API_BASE_URL,
     headers: {
         'Content-type': 'application/json',
     },
@@ -26,7 +26,7 @@ export async  function fetchPosts(){
 }
 
 
-export const fetchData = async ()=>{
+export  async function loadData(){
     try{
         const response = await  apiClient.get("/")
         return response.data

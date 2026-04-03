@@ -1,0 +1,38 @@
+# spring.application.name=second
+server:
+  port: 8085
+
+spring:
+  application:
+    name: backend
+  profiles:
+    active: local
+#  jwt:
+#    secret: c2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQtc2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQK
+#    access-token-validity-in-minutes: 110
+#    refresh-token-validity-in-minutes: 120
+#    token-prefix: "Bearer "
+#    token-header: "Authorization"
+
+
+#  jpa:
+#    hibernate:
+#      ddl-auto: create
+#    show-sql: false
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.OracleDialect
+#        default_batch_fetch_size: 500
+#        format_sql: true
+
+# Mybatis
+#mybatis:
+#  config-location: classpath:configuration.xml
+#  mapper-locations: classpath:mappers/*.xml
+
+# Logging Configuration
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.type: trace
+    org.hibernate.type.descriptor.sql.BasicBinder: trace

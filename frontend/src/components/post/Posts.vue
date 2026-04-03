@@ -7,9 +7,9 @@
  import {useStore} from "vuex";
 
  const store =useStore()
- onMounted(async ()=>{
-    await store.dispatch("postStore/loadPosts")
- })
+ // onMounted(async ()=>{
+ //    await store.dispatch("postStore/loadPosts")
+ // })
 
  const posts = computed(()=>store.getters['postStore/posts'])
 
@@ -19,6 +19,14 @@
 
 <template>
 
+  <div>
+    <template v-if="posts.length !== 0">
+      게시물 존재
+    </template>
+    <template v-else>
+      <p> 게시물이 없습니다 </p>
+    </template>
+  </div>
 </template>
 
 <style scoped>

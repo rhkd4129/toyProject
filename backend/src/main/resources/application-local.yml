@@ -1,0 +1,61 @@
+# spring.application.name=second
+server:
+  port: 8084
+
+#grpc:
+#  client:
+#    myService:  # 서비스 이름
+#      address: static://127.0.0.1:50051  # forTarget("127.0.0.1:50051")에 해당
+#      negotiationType: plaintext  # usePlaintext()에 해당
+
+spring:
+#  servlet:
+#    multipart:
+#      max-file-size: 20MB
+#      max-request-size: 20MB
+#      location: C:\Server\IMG\%NICKNAME\%NUM\
+#      enabled: true
+
+  jpa:
+    hibernate:
+#      ddl-auto: none
+      ddl-auto: create
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.OracleDialect
+        default_batch_fetch_size: 500
+        format_sql: true
+        naming:
+          physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        type: trace
+  datasource:
+    driver-class-name: oracle.jdbc.driver.OracleDriver
+    url: jdbc:oracle:thin:@localhost:1521/orcl
+    username: MYPROJECT
+    password: tiger2
+#  security:
+#    oauth2:
+#      client:
+#        registration:
+#          google:  # 예시로 Google OAuth2를 사용한다고 가정
+#            client-name: google
+#            scope: profile,email
+#            client-id: 205208599167-lbc3nd1hut7mg5qmspc3hr8ppu1e16dp.apps.googleusercontent.com
+#            client-secret: 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
+#            redirect-uri: http://localhost:8084/login/oauth2/code/google
+  #            authorization-grant: authorization_code
+#  data:
+#    redis:
+#      host: localhost
+#      port: 6379
+#      database: 0
+#      timeout: 3000
+#      client-type: lettuce
+#      lettuce:
+#        pool:
+#          max-active: 8
+#          max-idle: 8
+#          min-idle: 2
+#          max-wait: -1
+
