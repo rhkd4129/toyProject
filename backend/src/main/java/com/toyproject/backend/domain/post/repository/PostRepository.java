@@ -1,7 +1,9 @@
 package com.toyproject.backend.domain.post.repository;
 
 
+import com.toyproject.backend.domain.post.Enum.PostTypeEnum;
 import com.toyproject.backend.domain.post.entity.Post;
+import com.toyproject.backend.domain.post.entity.PostType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
@@ -33,40 +35,40 @@ public class PostRepository {
 //                .setMaxResults(limit)
                 .getResultList();
     }
-//    public List<PostType> listPostType(){
-//        return em.createQuery("select p_t from PostType p_t"
-//                        , PostType.class)
-//                        .getResultList();
-//    }
+    public List<PostType> listPostType(){
+        return em.createQuery("select p_t from PostType p_t"
+                        , PostType.class)
+                        .getResultList();
+    }
 //
-//    public Optional<PostType> selectPostType(String type){
-//        try{
-//          PostTypeEnum postTypeEnum = PostTypeEnum.valueOf(type);
-//
-//          PostType postType =   em.createQuery("select p_t from PostType p_t" +
-//                    " where p_t.postType =:type",PostType.class)
-//                    .setParameter("type",postTypeEnum)
-//                    .getSingleResult();
-//            return Optional.of(postType);
-//        }catch (NoResultException e){
-//            return Optional.empty();
-//        }
-//    }
-//
-//    public Optional<Post> selectPost(Long id) {
-//        try {
-//            Post post = em.createQuery("select p from Post p " +
+    public Optional<PostType> selectPostType(String type){
+        try{
+          PostTypeEnum postTypeEnum = PostTypeEnum.valueOf(type);
+
+          PostType postType =   em.createQuery("select p_t from PostType p_t" +
+                    " where p_t.postType =:type",PostType.class)
+                    .setParameter("type",postTypeEnum)
+                    .getSingleResult();
+            return Optional.of(postType);
+        }catch (NoResultException e){
+            return Optional.empty();
+        }
+    }
+
+    public Optional<Post> selectPost(Long id) {
+        try {
+            Post post = em.createQuery("select p from Post p " +
 //                            " join fetch p.member " +
-//                             "join fetch p.postType" +
-//                            " where p.id = :id"
-//                            , Post.class)
-//                    .setParameter("id", id)
-//                    .getSingleResult();
-//            return Optional.of(post);
-//        } catch (NoResultException e) {
-//            return Optional.empty();
-//        }
-//    }
+                             "join fetch p.postType" +
+                            " where p.id = :id"
+                            , Post.class)
+                    .setParameter("id", id)
+                    .getSingleResult();
+            return Optional.of(post);
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
+    }
 //
 //    public void removePost(Long id) {
 //        em.createQuery("update Post p " +

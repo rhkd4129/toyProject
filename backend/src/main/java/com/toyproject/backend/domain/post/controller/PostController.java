@@ -25,7 +25,7 @@ public class PostController {
         return new ResponseEntity<>(postService.getPosts(), HttpStatus.OK);
     }
 
-    // 단건 조회
+//    // 단건 조회
     @GetMapping("/list/{id}")
     public ResponseEntity<PostResponseDto> getPost(@PathVariable(name = "id") Long id) {
         return new ResponseEntity<>(postService.getPost(id), HttpStatus.OK);
@@ -37,21 +37,21 @@ public class PostController {
         postService.createPost(dto);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
-
-    // 수정
-    @PutMapping("/{id}")
-    public ResponseEntity<Void> updatePost(
-            @PathVariable(name = "id") Long id,
-            @RequestBody PostRequestDto dto
-    ) {
-        postService.updatePost(id, dto);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    // 삭제
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePost(@PathVariable(name = "id") Long id) {
-        postService.deletePost(id);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
+//
+//    // 수정
+//    @PutMapping("/{id}")
+//    public ResponseEntity<Void> updatePost(
+//            @PathVariable(name = "id") Long id,
+//            @RequestBody PostRequestDto dto
+//    ) {
+//        postService.updatePost(id, dto);
+//        return new ResponseEntity<>(HttpStatus.OK);
+//    }
+//
+//    // 삭제
+//    @DeleteMapping("/{id}")
+//    public ResponseEntity<Void> deletePost(@PathVariable(name = "id") Long id) {
+//        postService.deletePost(id);
+//        return new ResponseEntity<>(HttpStatus.OK);
+//    }
 }

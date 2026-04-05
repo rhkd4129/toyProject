@@ -44,18 +44,18 @@ public class PostService {
         );
         postRepository.createPost(post);
     }
-
-    // 수정
-    @Transactional
-    public void updatePost(Long id, PostRequestDto dto) {
-        Post post = postRepository.selectPost(id)
-                .orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다. id=" + id));
-        post.updatePost(dto.getTitle(), dto.getContent());
-    }
-
-    // 삭제 (soft delete)
-    @Transactional
-    public void deletePost(Long id) {
-        postRepository.removePost(id);
-    }
+//
+//    // 수정
+//    @Transactional
+//    public void updatePost(Long id, PostRequestDto dto) {
+//        Post post = postRepository.selectPost(id)
+//                .orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다. id=" + id));
+//        post.updatePost(dto.getTitle(), dto.getContent());
+//    }
+//
+//    // 삭제 (soft delete)
+//    @Transactional
+//    public void deletePost(Long id) {
+//        postRepository.removePost(id);
+//    }
 }
