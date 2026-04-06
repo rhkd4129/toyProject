@@ -1,11 +1,10 @@
 <script setup>
 import { reactive, ref } from "vue";
+import {useStore} from "vuex";
 
 const valid = ref(false);
-
-const formData = reactive({
-  pdfFile: null,
-});
+const store = useStore()
+const formData = ref({pdfFile: null,});
 
 
 const rules = reactive({
@@ -15,11 +14,16 @@ const rules = reactive({
   ]
 });
 
-const submitForm = ()=>{
+const submitForm = async ()=>{
+  try{
+    await store.dispatch("pdfStore/addPdf",formData.value)
+  }catch (error){
+
+  }
 
 }
 const resetForm = () => {
-  formData.pdfFile = null;
+  formData.value.pdfFile = null;
   valid.value = false;
 };
 </script>
@@ -30,7 +34,7 @@ const resetForm = () => {
             <v-card class="pa-4">
               <v-card-title class="text-h5 mb-4"></v-card-title>
               <v-file-input
-                  v-model="formData.pdfFile"
+                  v-model="formData"
                   :rules="rules.pdfFile"
                   label="이미지 업로드"
                   accept="image/*"

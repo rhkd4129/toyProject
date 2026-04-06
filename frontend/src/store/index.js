@@ -1,8 +1,10 @@
 import postStore from '@/store/post.js'
+import pdfStore from "@store/pdf.js";
 import { createStore } from "vuex";
 const store = createStore({
     modules: {
-        postStore
+        postStore,
+        pdfStore
     }
 })
 export default store

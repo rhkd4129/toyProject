@@ -1,6 +1,6 @@
 <script setup>
 
-import PdfForm from "@components/PdfForm.vue";
+import PdfForm from "@components/pdf/PdfForm.vue";
 </script>
 
 <template>
