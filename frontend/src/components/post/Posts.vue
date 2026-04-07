@@ -56,7 +56,7 @@ const goToPost = (item) => {
     hover
     @click:row="(_, { item }) => goToPost(item)"
   >
-    <template #item.postType="{ item }">
+    <template v-slot:item.postType="{ item }">
       <v-chip :color="postTypeColor(item.postType?.postType)" size="small" variant="tonal">
         {{ postTypeLabel(item.postType?.postType) }}
       </v-chip>
