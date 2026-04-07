@@ -5,6 +5,8 @@ import com.toyproject.backend.domain.post.dto.PostResponseDto;
 import com.toyproject.backend.domain.post.entity.Post;
 import com.toyproject.backend.domain.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,9 +16,12 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class PostService {
 
     private final PostRepository postRepository;
+
+
 
     // 목록 조회
     public List<PostResponseDto> getPosts() {
@@ -36,12 +41,15 @@ public class PostService {
     // 작성
     @Transactional
     public void createPost(PostRequestDto dto) {
+        log.info(dto.getPostType());
+
         Post post = Post.createPost(
                 dto.getTitle(),
                 dto.getContent(),
                 postRepository.selectPostType(dto.getPostType())
                         .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시물 유형입니다."))
         );
+        log.info(post.getPostType().toString());
         postRepository.createPost(post);
     }
 //

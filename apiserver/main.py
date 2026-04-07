@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-
+from PdfRequest import PdfRequest
 app = FastAPI()
 
 
@@ -8,10 +8,18 @@ def read_root():
     return {"Hello": "World"}
 
 
+
+
 @app.get("/items/{item_id}")
 def read_item(item_id: int, q: str | None = None):
     return {"item_id": item_id, "q": q}
 
+
+@app.post("/process-pdf")
+def process_pdf(request:PdfRequest):
+    print(request.filePath)  # pdfs/2024/abc123.pdf
+    print(request.jobId)     # job-uuid-001
+    return request.filePath
 
 # @app.post("/pdf/")
 # def pdf_upload()

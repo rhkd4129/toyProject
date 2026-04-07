@@ -15,7 +15,11 @@ const pdfStore={
     },
     actions:{
         async addPdf({state,commit},value){
-            const result = await createPdf(value)
+            const formData = new FormData();
+            formData.append("newPdf", value); // JSON.stringify 제
+            const result = await createPdf(formData)
+            console.log(result)
+
             // commit('setPdf',)response
         }
     }

@@ -2,19 +2,16 @@
 server:
   port: 8085
 
-#grpc:
-#  client:
-#    myService:  # 서비스 이름
-#      address: static://127.0.0.1:50051  # forTarget("127.0.0.1:50051")에 해당
-#      negotiationType: plaintext  # usePlaintext()에 해당
+fastapi:
+  url: http://localhost:8084
 
 spring:
-#  servlet:
-#    multipart:
-#      max-file-size: 20MB
-#      max-request-size: 20MB
-#      location: C:\Server\IMG\%NICKNAME\%NUM\
-#      enabled: true
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+      location: C:\Server\PDF\
+      enabled: true
 
   jpa:
     hibernate:
@@ -31,8 +28,8 @@ spring:
         type: trace
   datasource:
     driver-class-name: oracle.jdbc.driver.OracleDriver
-#    url: jdbc:oracle:thin:@localhost:1521/orcl
-    url: jdbc:oracle:thin:@localhost:1521/xe
+    url: jdbc:oracle:thin:@localhost:1521/orcl
+#    url: jdbc:oracle:thin:@localhost:1521/xe
     username: MYPROJECT
     password: tiger2
 #  security:

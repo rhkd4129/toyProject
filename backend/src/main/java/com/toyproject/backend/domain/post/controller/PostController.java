@@ -34,6 +34,8 @@ public class PostController {
     // 작성
     @PostMapping("/create")
     public ResponseEntity<Void> createPost(@RequestBody PostRequestDto dto) {
+        log.info("==== createPost 진입 ==== ");
+        System.out.println(dto.getTitle());
         postService.createPost(dto);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }

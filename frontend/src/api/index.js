@@ -17,7 +17,7 @@ export const apiFileClient  = axios.create({
 
 export async function createPost(newPost){
     try{
-        const response = await apiClient.post("/post/create",{"newPost":newPost})
+        const response = await apiClient.post("/post/create",newPost)
         return response.data
     }catch (error){
         console.error('Error create post:', error);
@@ -44,9 +44,7 @@ export async function fetchPost(id){
     }
 }
 
-export async function createPdf(newPdf){
-    const formData = new FormData()
-    formData.append('newPdf', newPdf)  // 바로 사용
+export async function createPdf(formData){
     try{
         const response  = await apiFileClient.post('/pdf/create',formData)
         return response.data

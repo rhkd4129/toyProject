@@ -1,9 +1,11 @@
 <script setup>
 import { reactive, ref } from "vue";
 import {useStore} from "vuex";
+import {useRouter} from "vue-router";
 
 const valid = ref(false);
 const store = useStore()
+const router = useRouter();
 const formData = ref({pdfFile: null,});
 
 
@@ -17,8 +19,9 @@ const rules = reactive({
 const submitForm = async ()=>{
   try{
     await store.dispatch("pdfStore/addPdf",formData.value)
+    router.push({ name: "posts" });
   }catch (error){
-
+    console.log(error)
   }
 
 }
