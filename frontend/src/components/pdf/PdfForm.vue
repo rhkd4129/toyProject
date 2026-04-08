@@ -39,7 +39,7 @@ const resetForm = () => {
               <v-file-input
                   v-model="formData"
                   :rules="rules.pdfFile"
-                  label="이미지 업로드"
+                  label="PDF 업로드"
                   accept="image/*"
                   prepend-icon="mdi-camera"
                   outlined
