@@ -53,14 +53,3 @@ export async function createPdf(formData){
         throw error;
     }
 }
-
-export  async function loadData(){
-    try{
-        const response = await  apiClient.get("/")
-        return response.data
-
-    }catch(error){
-        console.error('Error fetching PhotoList:', error);
-        throw error;
-    }
-}
