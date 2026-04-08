@@ -8,9 +8,9 @@ on:
       - 'backend/**'
 
 jobs:
-  deploy: # 작업이름
+  deploy:
     runs-on: ubuntu-latest
-    steps:    # 순차적으로 실행될 단계들
+    steps:
       - name: 코드 체크아웃
         uses: actions/checkout@v3
 
@@ -26,11 +26,35 @@ jobs:
           chmod +x gradlew
           ./gradlew clean build -x test
 
+      # 빌드된 jar 파일을 EC2로 전송
+      - name: EC2에 jar 파일 업로드
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          source: './backend/build/libs/*.jar'
+          target: '/home/${{ secrets.EC2_USER }}/app'
+          strip_components: 3  # backend/build/libs/ 경로 제거하고 jar만 복사
 
+      # EC2 접속 후 기존 프로세스 종료 → 새 jar 실행
+      - name: EC2에서 앱 재시작
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            # 기존 실행 중인 jar 프로세스 종료
+            PID=$(pgrep -f '*.jar' || true)
+            if [ -n "$PID" ]; then
+              kill -15 $PID
+              sleep 3
+            fi
 
-#      - name: 환경 설정           # 단계 이름 (로그에 표시됨)
-#        uses: actions/setup-node@v3 # 미리 정의된 액션 사용
-#        with:                     # 액션에 전달할 파라미터
-#          node-version: '16'      # Node.js 버전 지정
-#      - name: 테스트 실행         # 단계 이름
-#        run: npm test             # 실행할 명령어 (테스트)
+            # 새 jar 백그라운드 실행 (로그는 app.log에 저장)
+            cd /home/${{ secrets.EC2_USER }}/app
+            JAR_FILE=$(ls *.jar | tail -1)
+            nohup java -jar $JAR_FILE > app.log 2>&1 &
+
+            echo "배포 완료: $JAR_FILE 실행 중"
