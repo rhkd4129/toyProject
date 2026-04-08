@@ -13,3 +13,39 @@ jobs:
     steps:
       - name: 테스트 출력
         run: echo "frontend 변경 감지! 배포 시작!"
+        # run: 실제 쉘 명령어 실행 (터미널에서 치는 것과 동일)
+
+      # -------------------------------
+      # 2. 저장소 코드 가져오기
+      # -------------------------------
+      - name: 코드 체크아웃
+        uses: actions/checkout@v3
+        # uses: 이미 만들어진 GitHub Action 사용
+        # checkout: 현재 레포지토리 코드를 서버로 clone 해옴
+        # 이거 없으면 코드가 없어서 build 불가
+
+      # -------------------------------
+      # 3. Node.js 환경 세팅
+      # -------------------------------
+      - name: Node 설치
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+        # with: 해당 action에 옵션 전달
+
+
+      # -------------------------------
+      # 4. 프론트 의존성 설치
+      # -------------------------------
+      - name: 의존성 설치
+        working-directory: ./frontend
+        # working-directory: 해당 경로에서 명령어 실행
+        run: npm install
+
+      # -------------------------------
+      # 5. 프론트 빌드 실행
+      # -------------------------------
+      - name: 빌드 실행
+        working-directory: ./frontend
+        run: npm run build
+        # npm run build: package.json의 build 스크립트 실행
