@@ -22,12 +22,11 @@ public class FastApiClient {
     }
 
 
-    public String sendPdfPath(String filePath, String jobId) {
+    public String sendPdfPath(String filePath) {
         return webClient.post()
                 .uri("/process-pdf")
                 .bodyValue(Map.of(
-                        "filePath", filePath,
-                        "jobId", jobId
+                        "filePath", filePath
                 ))
                 .retrieve() // 요청을 실제로 실행 및 응답을 가져오겠다는 의미
                 .bodyToMono(String.class)

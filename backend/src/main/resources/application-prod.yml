@@ -10,7 +10,7 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
-      location: C:\Server\PDF\
+
 
   datasource:
     driver-class-name: oracle.jdbc.driver.OracleDriver
@@ -43,5 +43,6 @@ cloud:
       static: ap-northeast-2   # 서울 리전
     s3:
       bucket: toyproject-lee
+      key-prefix: pdf/
 
 

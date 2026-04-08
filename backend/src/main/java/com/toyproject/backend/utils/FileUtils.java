@@ -12,14 +12,12 @@ import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.UUID;
 
 public class FileUtils {
 //    public static String getTransFormImgName(TransformLevel  transformLevel,FileType fileType){
 //        return transformLevel.getTransformLevel()+"."+fileType.getExtension();
 //    }
-
-
-
 
     public static void uploadFile(String originalName, byte[] fileData, String path) throws IOException {
         File fileDirectory = new File(path);
@@ -28,6 +26,13 @@ public class FileUtils {
         }
         File target = new File(path, originalName);
         FileCopyUtils.copy(fileData, target);
+    }
+
+    public static String generateKey(String originalFilename){
+        String ext = originalFilename.substring(originalFilename.lastIndexOf(".")); // ".pdf"
+        String nameWithoutExt = originalFilename.substring(0, originalFilename.lastIndexOf(".")); // "abc"
+        return nameWithoutExt + "_" + UUID.randomUUID() + ext;
+
     }
 
     public static Resource getResource(String filePath , String fileName) throws MalformedURLException {
