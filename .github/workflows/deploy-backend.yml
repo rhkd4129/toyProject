@@ -1,0 +1,25 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+
+jobs:
+  deploy: # 작업이름
+    runs-on: ubuntu-latest
+    steps:    # 순차적으로 실행될 단계들
+      - name: 테스트 출력
+        run: echo "backend 변경 감지! 배포 시작!"
+
+
+
+
+#      - name: 환경 설정           # 단계 이름 (로그에 표시됨)
+#        uses: actions/setup-node@v3 # 미리 정의된 액션 사용
+#        with:                     # 액션에 전달할 파라미터
+#          node-version: '16'      # Node.js 버전 지정
+#      - name: 테스트 실행         # 단계 이름
+#        run: npm test             # 실행할 명령어 (테스트)

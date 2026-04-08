@@ -1,0 +1,15 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 테스트 출력
+        run: echo "frontend 변경 감지! 배포 시작!"
