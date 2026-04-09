@@ -27,34 +27,32 @@ jobs:
           ./gradlew clean build -x test
 
       # 빌드된 jar 파일을 EC2로 전송
-      - name: EC2에 jar 파일 업로드
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          source: './backend/build/libs/*.jar'
-          target: '/home/${{ secrets.EC2_USER }}/app'
-          strip_components: 3  # backend/build/libs/ 경로 제거하고 jar만 복사
-
-      # EC2 접속 후 기존 프로세스 종료 → 새 jar 실행
-      - name: EC2에서 앱 재시작
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          script: |
-            # 기존 실행 중인 jar 프로세스 종료
-            PID=$(pgrep -f '*.jar' || true)
-            if [ -n "$PID" ]; then
-              kill -15 $PID
-              sleep 3
-            fi
-
-            # 새 jar 백그라운드 실행 (로그는 app.log에 저장)
-            cd /home/${{ secrets.EC2_USER }}/app
-            JAR_FILE=$(ls *.jar | tail -1)
-            nohup java -jar $JAR_FILE > app.log 2>&1 &
-
-            echo "배포 완료: $JAR_FILE 실행 중"
+#      - name: EC2에 jar 파일 업로드
+#        uses: appleboy/scp-action@v0.1.7
+#        with:
+#          host: ${{ secrets.EC2_HOST }}
+#          username: ${{ secrets.EC2_USER }}
+#          key: ${{ secrets.EC2_KEY }}
+#          source: './backend/build/libs/*.jar'
+#          target: '/home/${{ secrets.EC2_USER }}/app'
+#          strip_components: 3  # backend/build/libs/ 경로 제거하고 jar만 복사
+#
+#      # EC2 접속 후 기존 프로세스 종료 → 새 jar 실행
+#      - name: EC2에서 앱 재시작
+#        uses: appleboy/ssh-action@v1.0.3
+#        with:
+#          host: ${{ secrets.EC2_HOST }}
+#          username: ${{ secrets.EC2_USER }}
+#          key: ${{ secrets.EC2_KEY }}
+#          script: |
+#            PID=$(pgrep -f '*.jar' || true)
+#            if [ -n "$PID" ]; then
+#              kill -15 $PID
+#              sleep 3
+#            fi
+#
+#            cd /home/${{ secrets.EC2_USER }}/app
+#            JAR_FILE=$(ls *.jar | tail -1)
+#            nohup java -jar $JAR_FILE \
+#              --spring.profiles.active=prod \   ← 이거 추가
+#              > app.log 2>&1 &
