@@ -1,0 +1,13 @@
+name: deploy-apiserver.yml
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apiserver/**'
+jobs:
+  depoly:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 파이썬 반영
+        run: echo "apiserver 배포 시작"

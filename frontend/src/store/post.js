@@ -1,4 +1,4 @@
-import {createPost, fetchPosts, fetchPost} from "@api";
+import {createPost, fetchPosts, fetchPost, updatePost} from "@api";
 
 const postStore = {
     namespaced:true,
@@ -25,6 +25,9 @@ const postStore = {
         },
         async addPost({state}, newPost) {
             const result = await createPost(newPost)
+        },
+        async editPost({state}, {id, post}) {
+            await updatePost(id, post)
         }
     }
 }

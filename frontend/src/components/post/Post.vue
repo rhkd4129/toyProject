@@ -60,6 +60,7 @@ const formatDate = (dateStr) => {
       </v-btn>
       <v-spacer />
       <v-btn variant="text" @click="router.back()">목록으로</v-btn>
+      <v-btn variant="tonal" color="primary" @click="router.push({ name: 'postEdit', params: { id: post.id } })">수정</v-btn>
     </v-card-actions>
   </v-card>
 

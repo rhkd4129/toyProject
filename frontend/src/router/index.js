@@ -24,6 +24,11 @@ const routes = [
         component: () => import('@pages/PostFormPage.vue')
     },
     {
+        path: '/post/:id/edit',
+        name: 'postEdit',
+        component: () => import('@pages/PostEditPage.vue')
+    },
+    {
         path: '/pdf/upload',
         name: 'pdfPage',
         component: PdfPage

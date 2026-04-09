@@ -4,8 +4,9 @@ import com.toyproject.backend.domain.post.dto.PostRequestDto;
 import com.toyproject.backend.domain.post.dto.PostResponseDto;
 import com.toyproject.backend.domain.post.entity.Post;
 import com.toyproject.backend.domain.post.repository.PostRepository;
+import com.toyproject.backend.error.CommonException;
+import com.toyproject.backend.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,8 +34,7 @@ public class PostService {
 
     // 단건 조회
     public PostResponseDto getPost(Long id) {
-        Post post = postRepository.selectPost(id)
-                .orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다. id=" + id));
+        Post post = postRepository.selectPost(id).orElseThrow(() -> new CommonException(ErrorCode.BOARD_N0_SUCH));
         return new PostResponseDto(post);
     }
 
@@ -46,24 +46,16 @@ public class PostService {
         Post post = Post.createPost(
                 dto.getTitle(),
                 dto.getContent(),
-                postRepository.selectPostType(dto.getPostType())
-                        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시물 유형입니다."))
+                postRepository.selectPostType(dto.getPostType()).orElseThrow(() -> new CommonException(ErrorCode.POST_TYPE_NOT_FOUND))
         );
         log.info(post.getPostType().toString());
         postRepository.createPost(post);
     }
-//
-//    // 수정
-//    @Transactional
-//    public void updatePost(Long id, PostRequestDto dto) {
-//        Post post = postRepository.selectPost(id)
-//                .orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다. id=" + id));
-//        post.updatePost(dto.getTitle(), dto.getContent());
-//    }
-//
-//    // 삭제 (soft delete)
-//    @Transactional
-//    public void deletePost(Long id) {
-//        postRepository.removePost(id);
-//    }
+
+    // 수정
+    @Transactional
+    public void updatePost(Long id, PostRequestDto dto) {
+        Post post = postRepository.selectPost(id).orElseThrow(() -> new CommonException(ErrorCode.BOARD_N0_SUCH));
+        post.updatePost(dto.getTitle(), dto.getContent());
+    }
 }

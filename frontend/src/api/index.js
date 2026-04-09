@@ -44,6 +44,16 @@ export async function fetchPost(id){
     }
 }
 
+export async function updatePost(id, updatedPost){
+    try{
+        const response = await apiClient.put(`/post/${id}`, updatedPost)
+        return response.data
+    }catch (error){
+        console.error('Error update post:', error);
+        throw error;
+    }
+}
+
 export async function createPdf(formData){
     try{
         const response  = await apiFileClient.post('/pdf/create',formData)

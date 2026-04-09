@@ -5,14 +5,10 @@ import com.toyproject.backend.domain.pdf.service.PdfService;
 import com.toyproject.backend.utils.Result;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import oracle.ucp.proxy.annotation.Post;
-import org.hibernate.validator.constraints.pl.REGON;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,8 +25,8 @@ public class PdfController {
 //    파일 + JSON 데이터를 같이 받을 때
 //    각 파트마다 Content-Type이 다를 수 있어서 이걸 구분해서 처리해줌
     @PostMapping("/create")
-    public ResponseEntity<?> createPdf(@RequestParam("newPdf") MultipartFile newPdf) throws IOException {
-        Result result =  pdfService.createPdf(newPdf);
+    public ResponseEntity<?> createPdf(@RequestParam("newPdf") MultipartFile newPdf) {
+        Result result = pdfService.createPdf(newPdf);
         log.info(" === createPdf 진입 === ");
         return new ResponseEntity<>(result,HttpStatus.OK);
     }
