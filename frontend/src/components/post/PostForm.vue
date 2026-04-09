@@ -21,6 +21,12 @@ const title = ref("");
 const content = ref("");
 const postType = ref(null);
 
+const serverErrors = ref({
+  title: [],
+  content: [],
+  postType: [],
+});
+
 const postTypeOptions = [
   { title: "공지사항", value: "NOTICE" },
   { title: "지식", value: "GENERAL" },
@@ -47,7 +53,12 @@ watch(
   { immediate: true }
 );
 
+const clearServerErrors = () => {
+  serverErrors.value = { title: [], content: [], postType: [] };
+};
+
 const submit = async () => {
+  clearServerErrors();
   const { valid } = await form.value.validate();
   if (!valid) return;
 
@@ -70,6 +81,15 @@ const submit = async () => {
         postType: postType.value,
       });
       router.push({ name: "posts" });
+    }
+  } catch (error) {
+    const data = error.response?.data;
+    if (data?.code === "COMMON-002") {
+      serverErrors.value = {
+        title: data.errors?.title ? [data.errors.title] : [],
+        content: data.errors?.content ? [data.errors.content] : [],
+        postType: data.errors?.postType ? [data.errors.postType] : [],
+      };
     }
   } finally {
     loading.value = false;
@@ -97,6 +117,8 @@ const cancel = () => {
           :items="postTypeOptions"
           label="분류"
           :rules="[rules.required]"
+          :error-messages="serverErrors.postType"
+          @update:modelValue="serverErrors.postType = []"
           class="mb-3"
         />
 
@@ -104,6 +126,8 @@ const cancel = () => {
           v-model="title"
           label="제목"
           :rules="[rules.required, rules.minLength]"
+          :error-messages="serverErrors.title"
+          @update:modelValue="serverErrors.title = []"
           class="mb-3"
         />
 
@@ -111,6 +135,8 @@ const cancel = () => {
           v-model="content"
           label="내용"
           :rules="[rules.required, rules.minLength]"
+          :error-messages="serverErrors.content"
+          @update:modelValue="serverErrors.content = []"
           rows="10"
           no-resize
         />

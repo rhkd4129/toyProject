@@ -1,46 +1,42 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+import requests
 from PdfRequest import PdfRequest
+
 app = FastAPI()
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-    return {"item_id": item_id, "q": q}
-
-# import requests
-#
-# def process_file_from_s3(url: str):
-#     with requests.get(url, stream=True) as r:
-#         r.raise_for_status()
-#
-#         for chunk in r.iter_content(chunk_size=1024 * 1024):  # 1MB씩
-#             if chunk:
-#                 # 👉 여기서 바로 처리 (파일 안 쌓음)
-#                 handle_chunk(chunk)
-#
-#
-# def handle_chunk(chunk: bytes):
-#     # 예시: 로그 찍기 / 파싱 / 변환 등
-#     print(f"chunk size: {len(chunk)}")
-
-
 @app.post("/process-pdf")
-def process_pdf(request:PdfRequest):
-    print(request.filePath)  # pdfs/2024/abc123.pdf
-    print(request.jobId)     # job-uuid-001
-    return request.filePath
+def process_pdf(request: PdfRequest):
+    with requests.get(request.presignedDownloadUrl, stream=True) as download:
+        if download.status_code != 200:
+            raise HTTPException(status_code=400, detail=f"S3 다운로드 실패: {download.status_code}")
 
-# @app.post("/pdf/")
-# def pdf_upload()
+        upload = requests.put(
+            request.presignedUploadUrl,
+            data=download.content,
+            headers={"Content-Type": "application/pdf"}
+        )
+
+    if upload.status_code != 200:
+        raise HTTPException(status_code=400, detail=f"S3 업로드 실패: {upload.status_code}")
+
+    return {"status": "success"}
 
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8084)
 
-
-    # fastapi dev
 # uvicorn main:app --port 8084
+# 우선순위	기능	이유
+# ⭐⭐⭐	Background Tasks	현재 코드에 바로 적용 가능
+# ⭐⭐⭐	Dependency Injection	인증, 공통 로직 분리 핵심
+# ⭐⭐	Response Model	API 명세 명확해짐
+# ⭐⭐	Lifespan + httpx	성능 개선
+# ⭐	Middleware	로깅, CORS 등 운영 레벨
+# 현재 코드에서 가장 임팩트 있는 변경은 requests → httpx 비동기 전환 + Background Tasks 조합이에요. 원하시면 전체 리팩토링 코드도 작성해드릴게요!
+
+
+
+
+

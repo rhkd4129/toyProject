@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,7 +36,7 @@ public class PostController {
 
     // 작성
     @PostMapping("/create")
-    public ResponseEntity<Void> createPost(@RequestBody PostRequestDto dto) {
+    public ResponseEntity<Void> createPost(@Valid @RequestBody PostRequestDto dto) {
         log.info("==== createPost 진입 ==== ");
         System.out.println(dto.getTitle());
         postService.createPost(dto);
@@ -46,7 +47,7 @@ public class PostController {
     @PutMapping("/{id}")
     public ResponseEntity<Void> updatePost(
             @PathVariable(name = "id") Long id,
-            @RequestBody PostRequestDto dto
+            @Valid @RequestBody PostRequestDto dto
     ) {
         log.info("==== updatePost 진입 ==== ");
         postService.updatePost(id, dto);
