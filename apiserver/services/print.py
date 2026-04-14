@@ -5,7 +5,7 @@ import fitz
 import numpy as np
 # from paddleocr import PaddleOCR
 import os
-PDF_PATH = "20260331133042.pdf"
+PDF_PATH = "a.pdf"
 print("EasyOCR 초기화 중...")
 reader = easyocr.Reader(['ko', 'en'])
 
@@ -28,7 +28,7 @@ for page_num, page in enumerate(doc):
         print(f"{text}")
 
     print()
-
+ 
 print("완료!")
 
 

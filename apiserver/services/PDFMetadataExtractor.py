@@ -51,8 +51,6 @@ class PDFMetadataExtractor(BaseProcessor):
             return int(match.group(1)), int(match.group(2))
         return None, None
     
-    def _extract_decision_pay(self):
-        pass
 
 
     def _extract_name(self, results: list) -> str | None:
@@ -123,6 +121,9 @@ class PDFMetadataExtractor(BaseProcessor):
                 self.people.append((single_name, single_case, [i]))
                 i += 1
 
+                # if single_case not in "타채":
+                    # 즉 사건번호에 타채가 안들어갓으면 기존처럼 남은쪽 번호는 뛰어넘으면되고 만약 타채가 잇다면 쪽번호를 건너 뒤지말고 하나씩 읽는데
+                    # self._extract_decision_pay 이 함수를 사용해서 true이면 
             else:
                 current_pages.append(i)
                 print(f"  → {current}/{total} (예외처리, 포함)")
@@ -168,6 +169,6 @@ class PDFMetadataExtractor(BaseProcessor):
 # 실행 진입점
 # ──────────────────────────────────────────
 
-# if __name__ == "__main__":
-#     with PDFMetadataExtractor("parameter.json") as extractor:
-#         extractor.run()
+if __name__ == "__main__":
+    with PDFMetadataExtractor("parameter.json") as extractor:
+        extractor.run()

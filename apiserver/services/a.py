@@ -2,20 +2,41 @@ import fitz
 import easyocr
 import numpy as np
 import re
+"""
+지정한 페이지를 300dpi로 래스터화한 뒤 OCR 결과를 반환한다.
+Args:
+    page_index: 읽을 페이지 인덱스
+    fraction  : 몇 분의 1로 자를지 (None이면 전체 읽기)
+                예) 8 → 1/8 크롭, 2 → 1/2 크롭
+    section   : "bottom" → 하단 1/fraction (기본값)
+                "top"    → 상단 1/fraction
 
+Examples:
+    self._ocr_page(i)                            # 전체
+    self._ocr_page(i, fraction=8)                # 하단 1/8
+    self._ocr_page(i, fraction=2, section="top") # 상단 1/2
+    """
+def _ocr_page(self, page_index: int, fraction: int = None, section: str = "bottom") -> list:
 
-def _ocr_page(reader, page) -> list:
+    page = self.doc[page_index]
     pix = page.get_pixmap(dpi=300)
     img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
         pix.height, pix.width, pix.n
     )
-    # 하단 1/8만 크롭
-    h = img_array.shape[0]
-    cropped = img_array[h * 7 // 8:, :, :]
 
-    return reader.readtext(cropped)
+    if fraction is None:
+        # 크롭 없이 전체 페이지 OCR
+        cropped = img_array
+    else:
+        h = img_array.shape[0]
+        if section == "bottom":
+            # 하단 1/fraction 크롭
+            cropped = img_array[h * (fraction - 1) // fraction:, :, :]
+        else:
+            # 상단 1/fraction 크롭
+            cropped = img_array[:h // fraction, :, :]
 
-
+    return self.reader.readtext(cropped)
 def extract_page_number(results: list) -> tuple[int | None, int | None]:
     full_text = " ".join(text for (_, text, _) in results)
     match = re.search(r'(\d+)\s*/\s*(\d+)', full_text)
