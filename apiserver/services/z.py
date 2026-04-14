@@ -51,6 +51,15 @@ class A(BaseProcessor):
         return self.reader.readtext(cropped)
     
 
+    def _extract_amount(self, results: list) -> str | None:
+        full_text = " ".join(text for (_, text, _) in results)
+        
+        # 금 6,700,014원 / 금 6,700,014 원 / 금6,700,014원 전부 커버
+        match = re.search(r'[금긍]\s*([\d,]+)\s*원?', full_text)
+        if match:
+            return match.group(1)  # 숫자만 반환 ex) "6,700,014"
+        return None
+
     def _extract_page_number(self, results: list) -> tuple[int | None, int | None]:
         """
         OCR 결과에서 '현재쪽/전체쪽' 패턴을 찾아 (current, total)을 반환.
@@ -65,6 +74,7 @@ class A(BaseProcessor):
 
     def _extract_decision_pay(self,results):
         combined = (results[0][1] + results[1][1]).replace(" ", "")
+        print(combined)
         pattern = r"^[청정]구[채재]권의표시$"
         return bool(re.match(pattern, combined))
         
@@ -100,5 +110,41 @@ class A(BaseProcessor):
                     #결정금액이없다.
                     print(f"  → {i + 1}~{i + total}페이지 스킵 (본문)")
                     i += total
+    def __enter__(self):
+            return self
 
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+    # def run(self):
+    #     results = self._ocr_page(6,fraction=2,section="top")
+    #     for (bbox, text, confidence) in results:
+    #         print(f"{text}")
+    #     pay  = self._extract_amount(results)
+    #     print(self._extract_decision_pay(results))
+    #     print(pay)
+    def run(self):
+        page = self.doc[6]
+        pix = page.get_pixmap(dpi=300)
+        img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
+            pix.height, pix.width, pix.n
+        )
 
+        # 상단 1/2 크롭
+        h = img_array.shape[0]
+        cropped = img_array[:h // 2, :, :]
+
+        # numpy → PNG 바이트
+        import cv2
+        success, buf = cv2.imencode(".png", cropped)
+        png_bytes = buf.tobytes()
+
+        # insert_pdf 대신 insert_image 사용
+        new_doc = fitz.open()
+        new_page = new_doc.new_page()
+        new_page.insert_image(new_page.rect, stream=png_bytes)
+        new_doc.save("z.pdf")
+        new_doc.close()
+
+        print("z.pdf 저장 완료")
+with A("parameter.json") as reader:
+    reader.run()
