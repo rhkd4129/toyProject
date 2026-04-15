@@ -51,14 +51,7 @@ class A(BaseProcessor):
         return self.reader.readtext(cropped)
     
 
-    def _extract_amount(self, results: list) -> str | None:
-        full_text = " ".join(text for (_, text, _) in results)
-        
-        # 금 6,700,014원 / 금 6,700,014 원 / 금6,700,014원 전부 커버
-        match = re.search(r'[금긍]\s*([\d,]+)\s*원?', full_text)
-        if match:
-            return match.group(1)  # 숫자만 반환 ex) "6,700,014"
-        return None
+
 
     def _extract_page_number(self, results: list) -> tuple[int | None, int | None]:
         """
@@ -71,12 +64,18 @@ class A(BaseProcessor):
             return int(match.group(1)), int(match.group(2))
         return None, None
     
-
-    def _extract_decision_pay(self,results):
-        combined = (results[0][1] + results[1][1]).replace(" ", "")
-        print(combined)
-        pattern = r"^[청정]구[채재]권의표시$"
-        return bool(re.match(pattern, combined))
+    def _extract_amount(self, results: list) -> str | None:
+        full_text = " ".join(text for (_, text, _) in results)
+        
+        # 금 6,700,014원 / 금 6,700,014 원 / 금6,700,014원 전부 커버
+        match = re.search(r'[금긍]\s*([\d,]+)\s*원?', full_text)
+        if match:
+            return match.group(1)  # 숫자만 반환 ex) "6,700,014"
+        return None
+    def _extract_decision_pay(self, results):
+        full_text = " ".join(text for (_, text, _) in results).replace(" ", "")
+        pattern = r'[청정]구[채재]권의표시'
+        return bool(re.search(pattern, full_text))  # match → search로 변경
         
 
     def parse(self) -> None:
@@ -92,8 +91,8 @@ class A(BaseProcessor):
             current, total = self.extract_page_number(results)
 
             if current == 1:
-                if current_pages:
-                    self.people.append((current_name, current_case, current_pages))
+                # if current_pages:
+                #     self.people.append((current_name, current_case, current_pages))
 
                 current_name = self._extract_name(results)
                 current_case = self._extract_case_number(results)
@@ -103,11 +102,13 @@ class A(BaseProcessor):
                 if current_case in "타채": #결정금액이 잇는문서
                     results = self._ocr_page(i,fraction=2,section="top")
                     if(self._extract_decision_pay(results)):
-                        # TODO: 여기서 금액을 추출해야함 
-                        pass
-                    i +=1
+                        pay = self._extract_amount(results)
+                        self.people.append((current_name, current_case,pay, current_pages))
+                        i +=1
+                    # else:
+                    #     print("해당 페이지 존재 x")
                 else:
-                    #결정금액이없다.
+                    self.people.append((current_name, current_case, current_pages))
                     print(f"  → {i + 1}~{i + total}페이지 스킵 (본문)")
                     i += total
     def __enter__(self):
@@ -115,36 +116,36 @@ class A(BaseProcessor):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
-    # def run(self):
-    #     results = self._ocr_page(6,fraction=2,section="top")
-    #     for (bbox, text, confidence) in results:
-    #         print(f"{text}")
-    #     pay  = self._extract_amount(results)
-    #     print(self._extract_decision_pay(results))
-    #     print(pay)
     def run(self):
-        page = self.doc[6]
-        pix = page.get_pixmap(dpi=300)
-        img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
-            pix.height, pix.width, pix.n
-        )
+        results = self._ocr_page(6,fraction=2,section="top")
+        for (bbox, text, confidence) in results:
+            print(f"{text}")
+        pay  = self._extract_amount(results)
+        print(self._extract_decision_pay(results))
+        print(pay)
+    # def run(self):
+    #     page = self.doc[6]
+    #     pix = page.get_pixmap(dpi=300)
+    #     img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
+    #         pix.height, pix.width, pix.n
+    #     )
 
-        # 상단 1/2 크롭
-        h = img_array.shape[0]
-        cropped = img_array[:h // 2, :, :]
+    #     # 상단 1/2 크롭
+    #     h = img_array.shape[0]
+    #     cropped = img_array[:h // 2, :, :]
 
-        # numpy → PNG 바이트
-        import cv2
-        success, buf = cv2.imencode(".png", cropped)
-        png_bytes = buf.tobytes()
+    #     # numpy → PNG 바이트
+    #     import cv2
+    #     success, buf = cv2.imencode(".png", cropped)
+    #     png_bytes = buf.tobytes()
 
-        # insert_pdf 대신 insert_image 사용
-        new_doc = fitz.open()
-        new_page = new_doc.new_page()
-        new_page.insert_image(new_page.rect, stream=png_bytes)
-        new_doc.save("z.pdf")
-        new_doc.close()
+    #     # insert_pdf 대신 insert_image 사용
+    #     new_doc = fitz.open()
+    #     new_page = new_doc.new_page()
+    #     new_page.insert_image(new_page.rect, stream=png_bytes)
+    #     new_doc.save("z.pdf")
+    #     new_doc.close()
 
-        print("z.pdf 저장 완료")
+    #     print("z.pdf 저장 완료")
 with A("parameter.json") as reader:
     reader.run()
