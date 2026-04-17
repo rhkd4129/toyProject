@@ -1,17 +1,20 @@
 from PDFMetadataExtractor import PDFMetadataExtractor
 from XLSXReader import XLSXReader
-from PDFCreate import PDFCreate
-from PDFSplitter import PDFSplitter
 from LogWrite import LogWrite
 import sys
+from XLSXCrate import XLSXCreate
 from datetime import datetime
+from PDFMetadataExtractor import PDFMetadataExtractor
+
+
+
 class Executor:
 
-      def __init__(self,configFile,xlslFile,metadataFile,outputFile):
+      def __init__(self,configFile,xlslFile,metadataFile):
           self.config = configFile
           self.xlsxFile = xlslFile
           self.metadataFile = metadataFile
-          self.outputFile = outputFile
+        #   self.outputFile = outputFile
 
       def _step1(self):
             with PDFMetadataExtractor(self.config) as pdfmetadataExtractor: 
@@ -19,13 +22,16 @@ class Executor:
       def _step2(self):
            with XLSXReader(self.xlsxFile,self.metadataFile) as xlsxreader:
                   xlsxreader.run()
-
       def _step3(self):
-           with PDFCreate(self.config,self.metadataFile,self.outputFile) as pdfcreate:
-                  pdfcreate.run()
-      def _step4(self):
-           with PDFSplitter(self.metadataFile,self.outputFile) as pdfsplitter:  
-                  pdfsplitter.run()
+           with XLSXCreate(self.metadataFile) as xlsxCreater:
+                  xlsxCreater.run()
+
+    #   def _step3(self):
+    #        with PDFCreate(self.config,self.metadataFile,self.outputFile) as pdfcreate:
+    #               pdfcreate.run()
+    #   def _step4(self):
+    #        with PDFSplitter(self.metadataFile,self.outputFile) as pdfsplitter:  
+    #               pdfsplitter.run()
 
       def run(self):
         filename = datetime.now().strftime("log_%Y%m%d_%H%M%S.txt")
@@ -42,8 +48,8 @@ class Executor:
             self._step1()
             print("2. -------------------------- 사건부 조회후 매칭 --------------------------")
             self._step2()
-            # print("3. --------------------------  라벨지pdf 생성  -------------------------- ")
-            # self._step3()
+            print("3. --------------------------  시트 생성  -------------------------- ")
+            self._step3()
             # print("4. --------------------------  pdf  분리   -------------------------- ")
             # self._step4()
 
@@ -62,5 +68,5 @@ class Executor:
 
 #  pyinstaller --onefile Executor.py
 if __name__ == "__main__":
-    executor = Executor("parameter.json","2026사건부.xlsx","output/metadata.json","output.pdf")  # ✅ 소문자로 인스턴스
+    executor = Executor("parameter.json","2026사건부.xlsx","output/metadata.json")  # ✅ 소문자로 인스턴스
     executor.run()

@@ -1,6 +1,6 @@
 import os
 from openpyxl import Workbook, load_workbook
-from openpyxl.styles import Font, Alignment, Border, Side
+from openpyxl.styles import Font, Alignment, Border, Side, PatternFill 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from BaseProcessor import BaseProcessor
@@ -16,6 +16,10 @@ class XLSXCreate(BaseProcessor):
         
 
     def create_xlsx(self):
+        # for i, item in enumerate(self.metadata):
+        #         if not isinstance(item, dict):
+        #             print(f"[{i}] 문제 항목 타입: {type(item)} / 값: {repr(item)[:80]}")
+
         if os.path.exists(self.OUTPUT_PATH):
             wb = load_workbook(self.OUTPUT_PATH)
         else:
@@ -34,6 +38,8 @@ class XLSXCreate(BaseProcessor):
        # 시트별 그룹핑
         sheets: dict = {}
         for item in self.metadata:
+            if not isinstance(item, dict):  # 문자열 등 비정상 항목 스킵
+                continue
             info = item.get("info", {})                        # ← info 추출
             sheet_name = info.get("sheet", "기타")             # ← info에서 sheet 참조
             sheets.setdefault(sheet_name, []).append(item)
@@ -54,7 +60,7 @@ class XLSXCreate(BaseProcessor):
 
             next_row = ws.max_row + 1 if ws.max_row > 1 else 2
             for i, item in enumerate(rows):
-                info = item.get("info", {})                    # ← info 추출
+                info = item.get("info", {})                    # ← info 추출                
                 row_data = [
                     info.get("담당자"),
                     self.format_bond_number(info.get("채권번호")),
@@ -63,7 +69,8 @@ class XLSXCreate(BaseProcessor):
                     info.get("사건번호"),
                     info.get("관할법원"),
                     "",
-                    "",
+                    item.get("amount","")
+                    
                 ]
                 ws.row_dimensions[next_row + i].height = 16
                 for col_idx, value in enumerate(row_data, start=1):
@@ -72,19 +79,27 @@ class XLSXCreate(BaseProcessor):
                     cell.alignment = center
                     cell.border    = border
         
-        ###### 
+       ###### 
         cur_row = 1
+        yellow_fill = PatternFill(fill_type="solid", fgColor="FFFF00")  # 노란색 정의
         ws = wb.create_sheet(title="사건데이터")
-        for i, value in enumerate (self.metadata):
+        for i, value in enumerate(self.metadata):
             row = value.get("info")
-                
-            if row is None:  # ← 추가
+            pay = value.get("amount", "")
+            
+            if row is None:
                 ws.row_dimensions[cur_row + i].height = 16
                 continue
+
+            sheet_name = (row.get("sheet") or "").strip()
+            
+            # 노란색 조건: amount 없음 OR sheet가 "개인금융"
+            should_highlight = (not pay) or (sheet_name == "개인금융")
+
             row_data = [
                 row.get("sheet"),
                 row.get("담당자"),
-                self.format_bond_number(row.get("채권번호")),  # ← 여기만 변경
+                self.format_bond_number(row.get("채권번호")),
                 row.get("채무자"),
                 row.get("사건"),
                 row.get("사건번호"),
@@ -92,12 +107,13 @@ class XLSXCreate(BaseProcessor):
                 row.get("집행권원법원"),
                 row.get("집행권원사건명"),
                 row.get("집행권원사건번호"),
-    
             ]
             ws.row_dimensions[cur_row + i].height = 16
-            for col_idx, value in enumerate(row_data, start=1):
-                    cell = ws.cell(row=cur_row + i, column=col_idx, value=value)
-                    cell.font      = data_font
+            for col_idx, val in enumerate(row_data, start=1):
+                cell = ws.cell(row=cur_row + i, column=col_idx, value=val)
+                cell.font = data_font
+                if should_highlight:
+                    cell.fill = yellow_fill  # 조건 충족 시 노란색
         wb.save(self.OUTPUT_PATH)
         print(f"저장 완료: {self.OUTPUT_PATH}")
 
@@ -123,5 +139,42 @@ class XLSXCreate(BaseProcessor):
         pass
 
 
-with XLSXCreate("output/metadata.json") as reader:
-    reader.run()
+# with XLSXCreate("output/metadata.json") as reader:
+#     reader.run()
+
+
+#     cur_row = 1
+# ws = wb.create_sheet(title="사건데이터")
+# write_row = cur_row  # 실제로 쓸 행 번호 별도 관리
+
+# for value in self.metadata:  # enumerate 제거
+#     row = value.get("info")
+#     pay = value.get("amount", "")
+
+#     if row is None:
+#         continue
+
+#     sheet_name = (row.get("sheet") or "").strip()
+
+#     # 조건 충족 시 스킵
+#     if (not pay) or (sheet_name == "개인금융"):
+#         continue
+
+#     row_data = [
+#         row.get("sheet"),
+#         row.get("담당자"),
+#         self.format_bond_number(row.get("채권번호")),
+#         row.get("채무자"),
+#         row.get("사건"),
+#         row.get("사건번호"),
+#         row.get("관할법원"),
+#         row.get("집행권원법원"),
+#         row.get("집행권원사건명"),
+#         row.get("집행권원사건번호"),
+#     ]
+#     ws.row_dimensions[write_row].height = 16
+#     for col_idx, val in enumerate(row_data, start=1):
+#         cell = ws.cell(row=write_row, column=col_idx, value=val)
+#         cell.font = data_font
+
+#     write_row += 1  # 실제로 쓴 경우에만 증가
