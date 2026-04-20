@@ -1,13 +1,12 @@
 import re
-import json
 import os
 import sys
 import fitz
 import easyocr
 import numpy as np
+
+
 class PDFSplitter:
-
-
 
     """
     채무자별로 PDF를 분리하는 클래스.
@@ -15,13 +14,21 @@ class PDFSplitter:
     사람별로 페이지를 묶어 개별 PDF로 저장한다.
     """
 
-
     DIVISION_WORD = "채무자"
 
-    def __init__(self, parameter_file: str = "parameter.json"):
-        self.metadata = self._load_metadata(parameter_file)
-        self.pdf_path: str = self.metadata["PDF_PATH"]
-        self.output_dir: str = os.path.join(os.path.dirname(self.pdf_path), "output")
+    def __init__(self):
+        # 현재 스크립트가 위치한 디렉토리
+        # 수정 (exe/py 둘 다 동작)
+        if getattr(sys, 'frozen', False):
+            self.base_dir = os.path.dirname(sys.executable)  # exe 위치
+        else:
+            self.base_dir = os.path.dirname(os.path.abspath(__file__))  # py 위치
+
+        # 같은 폴더에서 PDF 파일 자동 탐색
+        self.pdf_path: str = self._find_pdf()
+        print(f"처리할 PDF: {self.pdf_path}")  # 이 PDF를 처리한다
+
+        self.output_dir: str = os.path.join(self.base_dir, "output")
 
         self.reader = easyocr.Reader(['ko', 'en'])
         self.doc = fitz.open(self.pdf_path)
@@ -34,17 +41,18 @@ class PDFSplitter:
     # 초기화 헬퍼
     # ──────────────────────────────────────────
 
-    @staticmethod
-    def _load_metadata(parameter_file: str) -> dict:
-        try:
-            with open(parameter_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except FileNotFoundError:
-            print(f"❌ 파일을 찾을 수 없습니다: {parameter_file}")
+    def _find_pdf(self) -> str:
+        """스크립트와 같은 폴더에 있는 PDF 파일을 찾아 경로를 반환한다."""
+        pdfs = [f for f in os.listdir(self.base_dir) if f.lower().endswith('.pdf')]
+
+        if len(pdfs) == 0:
+            print("❌ PDF 파일을 찾을 수 없습니다.")
             sys.exit(1)
-        except json.JSONDecodeError:
-            print(f"❌ JSON 파싱 실패: {parameter_file}")
+        if len(pdfs) > 1:
+            print(f"❌ PDF 파일이 여러 개 감지됐습니다: {pdfs}\n하나만 남겨주세요.")
             sys.exit(1)
+
+        return os.path.join(self.base_dir, pdfs[0])
 
     # ──────────────────────────────────────────
     # OCR 관련 메서드
@@ -133,6 +141,7 @@ class PDFSplitter:
         """파싱 결과를 바탕으로 사람별 PDF를 output 폴더에 저장한다."""
         os.makedirs(self.output_dir, exist_ok=True)
         unknown_count = 0
+        name_counter: dict[str, int] = {}  # 이름 등장 횟수 추적
 
         for name, pages in self.people:
             if name:
@@ -140,6 +149,13 @@ class PDFSplitter:
             else:
                 unknown_count += 1
                 file_name = "미상" if unknown_count == 1 else f"미상_{unknown_count}"
+
+            # 중복 이름 처리
+            if file_name in name_counter:
+                name_counter[file_name] += 1
+                file_name = f"{file_name}_{name_counter[file_name]}"
+            else:
+                name_counter[file_name] = 1
 
             save_path = os.path.join(self.output_dir, f"{file_name}.pdf")
 
@@ -152,9 +168,6 @@ class PDFSplitter:
             print(f" {file_name}.pdf 저장 완료 (총 {len(pages)}페이지)")
 
         print("\n모든 PDF 분리 완료!")
-
-
-
 
     def run(self) -> None:
         """parse → save를 순서대로 실행하는 편의 메서드."""
@@ -181,5 +194,10 @@ class PDFSplitter:
 # ──────────────────────────────────────────
 
 if __name__ == "__main__":
-    with PDFSplitter("parameter.json") as splitter:
-        splitter.run()
+    try:
+        with PDFSplitter() as splitter:
+            splitter.run()
+    except Exception as e:
+        print(f"\n❌ 오류 발생: {e}")
+    finally:
+        input("\n종료하려면 Enter를 누르세요...")
