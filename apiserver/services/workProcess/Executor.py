@@ -83,3 +83,6 @@ if __name__ == "__main__":
         import traceback
         traceback.print_exc()  # 에러를 터미널에 직접 출력
         input("\n에러 확인 후 Enter...")
+
+
+        # pyinstaller --onefile --add-data "apiserver/services/workProcess/NANUMGOTHIC.TTF;." apiserver/services/workProcess/Executor.py
