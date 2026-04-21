@@ -2,6 +2,7 @@ import fitz
 import easyocr
 import numpy as np
 import os
+from datetime import datetime
 import re
 import json
 from apiserver.services.utils import BaseProcessor
@@ -13,11 +14,23 @@ class PDFMetadataExtractor(BaseProcessor):
     DIVISION_WORD = "채무자"
     CASE_WORD = "사건"
 
-    def __init__(self, parameter_file:str): 
-        self.metadata = self.load_json(parameter_file)
-    
-        self.pdf_path: str = self.metadata["PDF_PATH"]
-        self.output_dir: str = os.path.join(os.path.dirname(self.pdf_path), "output")
+    def __init__(self):
+        import sys
+        base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.getcwd()
+        pdfs = [f for f in os.listdir(base_dir) if f.lower().endswith('.pdf')]
+
+        if len(pdfs) == 0:
+            print("PDF 파일이 없습니다.")
+            sys.exit(1)
+        if len(pdfs) > 1:
+            print(f"PDF 파일이 2개 이상입니다: {pdfs}")
+            sys.exit(1)
+
+        self.pdf_path: str = os.path.join(base_dir, pdfs[0])
+        print(f"PDF 파일 감지: {self.pdf_path}")
+
+        today = datetime.now().strftime("%Y%m%d")
+        self.output_dir: str = os.path.join(base_dir, today)
 
         self.reader = easyocr.Reader(['ko', 'en'])
         self.doc = fitz.open(self.pdf_path)
