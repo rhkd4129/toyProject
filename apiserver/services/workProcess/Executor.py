@@ -1,23 +1,21 @@
-from PDFMetadataExtractor import PDFMetadataExtractor
-from XLSXReader import XLSXReader
-from LogWrite import LogWrite
 import sys
-from XLSXCrate import XLSXCreate
+import os
 from datetime import datetime
-from PDFMetadataExtractor import PDFMetadataExtractor
-
-
+if not getattr(sys, 'frozen', False):
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../../")
+from apiserver.services.workProcess import PDFMetadataExtractor, XLSXReader, XLSXCreate
+from apiserver.services.utils import LogWrite
 
 class Executor:
 
-      def __init__(self,configFile,xlslFile,metadataFile):
-          self.config = configFile
+      def __init__(self,xlslFile,metadataFile):
           self.xlsxFile = xlslFile
           self.metadataFile = metadataFile
+          os.makedirs(os.path.dirname(metadataFile), exist_ok=True)
         #   self.outputFile = outputFile
 
       def _step1(self):
-            with PDFMetadataExtractor(self.config) as pdfmetadataExtractor: 
+            with PDFMetadataExtractor() as pdfmetadataExtractor:
                   pdfmetadataExtractor.run()
       def _step2(self):
            with XLSXReader(self.xlsxFile,self.metadataFile) as xlsxreader:
@@ -66,7 +64,22 @@ class Executor:
             log.close()
             input("\n종료하려면 Enter를 누르세요...")  # 에러 나도 항상 실행
 
-#  pyinstaller --onefile Executor.py
+#  pyinstaller --onefile Executor.pySs
 if __name__ == "__main__":
-    executor = Executor("parameter.json","2026사건부.xlsx","output/metadata.json")  # ✅ 소문자로 인스턴스
-    executor.run()
+
+    print("▶ 스크립트 진입 성공")  # 여기서 출력되면 import는 OK
+
+    try:
+        base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.getcwd()
+        today = datetime.now().strftime("%Y%m%d")
+        print("▶ Executor 생성 시도")
+        executor = Executor(
+            os.path.join(base_dir, "2026사건부.xlsx"),
+            os.path.join(base_dir, f"{today}/metadata.json")
+        )
+        print("▶ Executor 생성 성공, run() 호출")
+        executor.run()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()  # 에러를 터미널에 직접 출력
+        input("\n에러 확인 후 Enter...")

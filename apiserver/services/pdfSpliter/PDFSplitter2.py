@@ -1,6 +1,6 @@
 import fitz
 import os
-from BaseProcessor import BaseProcessor 
+from apiserver.services.utils.BaseProcessor import BaseProcessor 
 
 
 class PDFSplitter(BaseProcessor):

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 import requests
-from PdfRequest import PdfRequest
+from apiserver.pdfRequest.PdfRequest import PdfRequest
 
 app = FastAPI()
 

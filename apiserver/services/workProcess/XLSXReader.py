@@ -1,6 +1,5 @@
 import pandas as pd
-import numpy as np
-from BaseProcessor import BaseProcessor
+from apiserver.services.utils import BaseProcessor
 import json
 # @staticmethod란?
 # @staticmethod는 클래스/인스턴스와 무관하게 동작하는 순수 함수입니다.

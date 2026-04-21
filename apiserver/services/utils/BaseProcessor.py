@@ -7,6 +7,7 @@ class BaseProcessor:
 
     @staticmethod
     def load_json(path: str) -> dict | list:
+        print(path)
         """JSON 파일 로드 (에러 처리 포함)"""
         try:
             with open(path, 'r', encoding='utf-8') as f:
