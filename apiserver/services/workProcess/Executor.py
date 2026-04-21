@@ -1,10 +1,12 @@
-from PDFMetadataExtractor import PDFMetadataExtractor
-from XLSXReader import XLSXReader
-from LogWrite import LogWrite
 import sys
-from XLSXCrate import XLSXCreate
+import os
 from datetime import datetime
-from PDFMetadataExtractor import PDFMetadataExtractor
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../../")
+from apiserver.services.workProcess import PDFMetadataExtractor, XLSXReader, XLSXCreate
+from apiserver.services.utils import LogWrite
+
+
+
 
 
 

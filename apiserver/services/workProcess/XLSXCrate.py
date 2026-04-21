@@ -3,7 +3,8 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from BaseProcessor import BaseProcessor
+# XLSXCrate.py 변경 후
+from apiserver.services.utils import BaseProcessor  # 짧아짐
 
 class XLSXCreate(BaseProcessor):
     font_path = "NANUMGOTHIC.TTF"
