@@ -1,6 +1,7 @@
 import pandas as pd
 from apiserver.services.utils import BaseProcessor
 import json
+import os
 # @staticmethod란?
 # @staticmethod는 클래스/인스턴스와 무관하게 동작하는 순수 함수입니다.
 # 그래서 self를 파라미터로 받지 않고, 당연히 self.뭔가에도 접근할 수 없습니다.
@@ -66,18 +67,25 @@ class XLSXReader(BaseProcessor):
             if(found):
                 print(f"{target_name} 찾음")
             if not found:
-                if str(target_number[0:4]) != str(self.year):
-                    new_xlsx_file = self.xlsx_file_name.replace(self.year, target_number[0:4])
-                    print(f"{target_name}은 {target_number[0:4]} 이므로 해당년도 파일 탐색 : {new_xlsx_file}")
-                    try:
-                        self.sheets = self._load_xlsx(new_xlsx_file)
-                        found = self._search_in_sheets(target_name, target_number, item)  # ← 다른 연도
-                        if(found):
-                            print(f"{target_name} 찾음")
-                    except FileNotFoundError:
-                        print(f"{new_xlsx_file} 파일을 찾을 수 없습니다.")
-                    finally:
-                        self.sheets =  self._load_xlsx(self.xlsx_file_name)  # 원본 복원
+                print("시트에서 데이터를 못찾았습니다.!!!!")
+                # if str(target_number[0:4]) != str(self.year):
+                    
+                #     before_year = int(self.year) -1
+                #     filename = os.path.basename(new_xlsx_file)
+                #     new_filename = filename.replace(str(self.year), str(before_year))
+                #     new_xlsx_file = os.path.join(os.path.dirname(new_xlsx_file), new_filename)
+                #     # new_xlsx_file = self.xlsx_file_name.replace(self.year, target_number[0:4])
+
+                #     print(f"{target_name}은 {target_number[0:4]} 이므로 해당년도 파일 탐색 : {new_xlsx_file}")
+                #     try:
+                #         self.sheets = self._load_xlsx(new_xlsx_file)
+                #         found = self._search_in_sheets(target_name, target_number, item)  # ← 다른 연도
+                #         if(found):
+                #             print(f"{target_name} 찾음")
+                #     except FileNotFoundError:
+                #         print(f"{new_xlsx_file} 파일을 찾을 수 없습니다.")
+                #     finally:
+                #         self.sheets =  self._load_xlsx(self.xlsx_file_name)  # 원본 복원
 
             if not found:
                 print(f" 매치 없음 - 이름: {target_name} | 사건번호: {target_number}")

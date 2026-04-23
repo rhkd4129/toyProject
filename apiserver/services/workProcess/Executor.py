@@ -1,10 +1,12 @@
 import sys
 import os
 from datetime import datetime
-if not getattr(sys, 'frozen', False):
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../../")
+# if not getattr(sys, 'frozen', False):
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../../")
 from apiserver.services.workProcess import PDFMetadataExtractor, XLSXReader, XLSXCreate
 from apiserver.services.utils import LogWrite
+import traceback
+
 
 class Executor:
 
@@ -52,7 +54,7 @@ class Executor:
             # self._step4()
 
         except Exception as e:
-            import traceback
+           
             traceback.print_exc()  # 에러 내용 콘솔에 출력
         finally:
             end_time = datetime.now()
@@ -75,8 +77,8 @@ if __name__ == "__main__":
         print("▶ Executor 생성 시도")
         executor = Executor(
             os.path.join(base_dir, "2026사건부.xlsx"),
-            os.path.join(base_dir, f"{today}/metadata.json")
-        )
+            os.path.join(base_dir, today, "metadata.json")
+        )       
         print("▶ Executor 생성 성공, run() 호출")
         executor.run()
     except Exception as e:
@@ -85,4 +87,6 @@ if __name__ == "__main__":
         input("\n에러 확인 후 Enter...")
 
 
-        # pyinstaller --onefile --add-data "apiserver/services/workProcess/NANUMGOTHIC.TTF;." apiserver/services/workProcess/Executor.py
+
+
+# pyinstaller --onefile --add-data "NANUMGOTHIC.TTF;." --paths "../../../" Executor.py

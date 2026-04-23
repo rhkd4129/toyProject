@@ -8,24 +8,25 @@ from reportlab.pdfbase.ttfonts import TTFont
 from apiserver.services.utils import BaseProcessor
 
 class XLSXCreate(BaseProcessor):
-    font_path   = "NANUMGOTHIC.TTF"
-    HEADER      = ["담당자", "채권번호", "채무자", "사건명", "사건번호", "법원", "결정일", "결정금액"]
-    
-
-    # 변경 전
-    # OUTPUT_PATH = "output/result.xlsx"
-
-    # 변경 후
+    font_path = "NANUMGOTHIC.TTF"
+    HEADER    = ["담당자", "채권번호", "채무자", "사건명", "사건번호", "법원", "결정일", "결정금액"]
 
     def __init__(self, metadata_file_name):
         pdfmetrics.registerFont(TTFont("NanumGothic", self.font_path))
         self.metadata = self.load_json(metadata_file_name)
-        self.OUTPUT_PATH = f"{datetime.now().strftime('%Y%m%d')}/result.xlsx"  # ← 여기로
 
-    def create_xlsx(self):
-        today_str = datetime.now().strftime("%Y-%m-%d")
+        if getattr(sys, 'frozen', False):
+            base_dir = os.path.dirname(sys.executable)
+        else:
+            base_dir = os.getcwd()
+
+        now              = datetime.now()
+        today            = now.strftime('%Y%m%d')
+        self.today_str   = now.strftime("%Y-%m-%d")
+        self.OUTPUT_PATH = os.path.join(base_dir, today, "result.xlsx")
         os.makedirs(os.path.dirname(self.OUTPUT_PATH), exist_ok=True)
 
+    def create_xlsx(self):
         # ── 워크북 준비 ──
         if os.path.exists(self.OUTPUT_PATH):
             wb = load_workbook(self.OUTPUT_PATH)
@@ -104,16 +105,19 @@ class XLSXCreate(BaseProcessor):
                     cell.border    = border
 
             # 날짜: 데이터 끝 아래 E열
-            date_row             = next_row + len(rows)
-            date_cell            = ws.cell(row=date_row, column=5, value=today_str)
-            date_cell.font       = Font(name="맑은 고딕", size=10)
-            date_cell.alignment  = Alignment(horizontal="center", vertical="center")
+            date_row            = next_row + len(rows)
+            date_cell           = ws.cell(row=date_row, column=5, value=self.today_str)
+            date_cell.font      = Font(name="맑은 고딕", size=10)
+            date_cell.alignment = Alignment(horizontal="center", vertical="center")
             ws.row_dimensions[date_row].height = 16
 
         # ──────────────────────────────────────────
-        # 2. 사건데이터 시트 → 원래대로
+        # 2. 사건데이터 시트
         # ──────────────────────────────────────────
+        if "사건데이터" in wb.sheetnames:
+            del wb["사건데이터"]
         ws = wb.create_sheet(title="사건데이터")
+
         for i, value in enumerate(self.metadata):
             row = value.get("info")
             pay = value.get("amount", "")
@@ -122,7 +126,7 @@ class XLSXCreate(BaseProcessor):
                 ws.row_dimensions[i + 1].height = 16
                 continue
 
-            sheet_name      = (row.get("sheet") or "").strip()
+            sheet_name       = (row.get("sheet") or "").strip()
             should_highlight = (not pay) or (sheet_name == "개인금융")
 
             row_data = [
@@ -144,9 +148,12 @@ class XLSXCreate(BaseProcessor):
                 if should_highlight:
                     cell.fill = yellow_fill
 
-        # ── 저장 (1번만!) ──
+        # ── 저장 ──
         wb.save(self.OUTPUT_PATH)
         print(f"저장 완료: {self.OUTPUT_PATH}")
+
+    def run(self):
+        self.create_xlsx()
 
     def format_bond_number(self, value):
         """채권번호 포맷: 212056480 → 212-056480"""
@@ -157,53 +164,8 @@ class XLSXCreate(BaseProcessor):
             return f"{s[:3]}-{s[3:]}"
         return s
 
-    def run(self):
-        self.create_xlsx()
-
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
-
-
-
-# with XLSXCreate("output/metadata.json") as reader:
-#     reader.run()
-
-
-#     cur_row = 1
-# ws = wb.create_sheet(title="사건데이터")
-# write_row = cur_row  # 실제로 쓸 행 번호 별도 관리
-
-# for value in self.metadata:  # enumerate 제거
-#     row = value.get("info")
-#     pay = value.get("amount", "")
-
-#     if row is None:
-#         continue
-
-#     sheet_name = (row.get("sheet") or "").strip()
-
-#     # 조건 충족 시 스킵
-#     if (not pay) or (sheet_name == "개인금융"):
-#         continue
-
-#     row_data = [
-#         row.get("sheet"),
-#         row.get("담당자"),
-#         self.format_bond_number(row.get("채권번호")),
-#         row.get("채무자"),
-#         row.get("사건"),
-#         row.get("사건번호"),
-#         row.get("관할법원"),
-#         row.get("집행권원법원"),
-#         row.get("집행권원사건명"),
-#         row.get("집행권원사건번호"),
-#     ]
-#     ws.row_dimensions[write_row].height = 16
-#     for col_idx, val in enumerate(row_data, start=1):
-#         cell = ws.cell(row=write_row, column=col_idx, value=val)
-#         cell.font = data_font
-
-#     write_row += 1  # 실제로 쓴 경우에만 증가

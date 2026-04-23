@@ -6,6 +6,8 @@ from datetime import datetime
 import re
 import json
 from apiserver.services.utils import BaseProcessor
+import sys
+
 """
     채무자별 메타데이터(이름, 사건번호, 페이지 수, 시작 페이지)만 추출해 metadata.json으로 저장하는 클래스.
     PDF 분리는 수행하지 않는다.
@@ -15,8 +17,15 @@ class PDFMetadataExtractor(BaseProcessor):
     CASE_WORD = "사건"
 
     def __init__(self):
-        import sys
-        base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.getcwd()
+        # base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.getcwd()
+        # print(base_dir)
+        if getattr(sys, 'frozen', False):
+            base_dir = os.path.dirname(sys.executable)
+        else:
+            base_dir = os.getcwd()
+
+
+        
         pdfs = [f for f in os.listdir(base_dir) if f.lower().endswith('.pdf')]
 
         if len(pdfs) == 0:
