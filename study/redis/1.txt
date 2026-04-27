@@ -1,0 +1,9 @@
+redis-server &
+redis-server
+redis-cli 서버 접속
+netstat -tlnp 실행중인 포트번호
+
+
+redis-cli ping    확인
+
+redis-cli shutdown 종료
