@@ -7,6 +7,7 @@ import com.toyproject.backend.utils.Result;
 import com.toyproject.backend.utils.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
@@ -19,11 +20,14 @@ public class PdfService {
 
     private final FastApiClient fastApiClient;
     private final StorageService storageService;
+    private final RedisTemplate<String, Object> redisTemplate;
+
 
     public Result createPdf(MultipartFile file) {
         try {
             Result result = new Result();
             String filePath = storageService.uploadFile(file);
+            redisTemplate.opsForList().rightPush("producer:group", "value1");
             String a = fastApiClient.sendPdfPath(filePath);
             result.setMessage(a);
             return result;

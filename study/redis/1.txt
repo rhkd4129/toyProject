@@ -7,3 +7,78 @@ netstat -tlnp 실행중인 포트번호
 redis-cli ping    확인
 
 redis-cli shutdown 종료
+
+
+Redis
+메모리사용  / 데이터 백업
+
+wsl --list --online     사용할 수 있는 배고판 퐉인
+wsl --list              이건 깔려잇는거 확인
+powershell
+1, wsl --install        재시작
+
+3. wsl --install Ubuntu-22.04  우분투 설치 -> 재시작
+
+
+username rhkd4129
+password 1234
+
+  System load:  0.45                Processes:             32
+  Usage of /:   0.1% of 1006.85GB   Users logged in:       0
+  Memory usage: 5%                  IPv4 address for eth0: 172.21.128.21
+  Swap usage:   0%
+
+ System load     : 시스템이 얼마나 바쁜지 보여주는 수치 -> 0.45는 매우 여유로운 상태를 의미.
+ Usage of /      : 디스크 사용량 전체 1006.85GB 중 0.1%만 사용 중
+ Memory usage    : RAM(메모리) 사용량 전체 메모리의 5%만 사용 중
+ Swap usage      : 가상 메모리 사용량 지금은 사용하지 않고 있ㄷ
+ Processes       : 현재 실행 중인 프로그램 개수
+ Users logged in :  현재 접속한 다른 사용자 수
+
+IPv4 address for eth0: WSL에 할당된 네트워크 주소
+
+
+# Redis 저장소 추가
+curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+
+# 패키지 목록 업데이트
+sudo apt update
+
+# Redis 설치
+sudo apt install redis
+
+# Redis 서비스 시작
+sudo service redis-server start
+
+# 서버 중지
+sudo service redis-server stop
+
+# 서버 재시작
+sudo service redis-server restart
+
+# Redis 서비스 상태 확인
+sudo service redis-server status
+
+redis-cli
+
+# 서버 정보 확인
+INFO
+
+# 메모리 사용량 확인
+INFO memory
+
+# 클라이언트 접속 정보
+CLIENT LIST
+
+# 실시간 명령어 모니터링
+MONITOR
+
+
+# 설정 파일 위치
+sudo nano /etc/redis/redis.conf
+주요 설정 옵션:
+- bind 127.0.0.1 : 접근 허용 IP 설정
+- port 6379 : 포트 설정
+- requirepass foobared : 비밀번호 설정
+- maxmemory 2gb : 최대 메모리 설정

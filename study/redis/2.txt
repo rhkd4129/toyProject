@@ -1,0 +1,31 @@
+XADD  mystream  *  event "order_created"  orderId "1001"  status "pending"
+ │       │      │       │                      │                │
+ │       │      │       └──────────────────────┴────────────────┘
+ │       │      │                    필드-값 쌍 (key-value)
+ │       │      │
+명령어  스트림명  ID
+
+# 스트림 길이 확인
+XLEN mystream
+
+# 전체 메시지 조회 (지우지 않음)
+XRANGE mystream - +
+#                ^ ^
+#           처음부터 끝까지
+
+컨슈머 그룹은 Redis 안에 존재하는 개념
+Spring이나 FastAPI는 그걸 가져다 쓰는 것 뿐
+
+# 컨슈머 그룹 생성 (여러 워커가 나눠서 처리)
+XGROUP CREATE mystream order-group $ MKSTREAM
+#                                     ^^^^^^^^
+#                            mystream 없으면 자동 생성
+
+# 컨슈머 그룹에서 읽기
+XREADGROUP  GROUP  order-group  worker1  COUNT 1  STREAMS  mystream  >
+     │         │       │           │        │        │         │      │
+     │         │       │           │        │        │         │      │
+  명령어     키워드  그룹이름    워커이름   1개만   키워드   스트림명  ID
+
+# 처리 완료 ACK
+XACK mystream mygroup <message-id>
