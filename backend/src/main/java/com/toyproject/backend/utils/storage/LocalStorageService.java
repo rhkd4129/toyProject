@@ -1,4 +1,5 @@
 package com.toyproject.backend.utils.storage;
+import com.toyproject.backend.utils.FileUploadResult;
 import com.toyproject.backend.utils.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -15,11 +16,11 @@ public class LocalStorageService implements StorageService{
     private  String uploadPathPattern;
 
     @Override
-    public String uploadFile(MultipartFile file) throws IOException {
+    public FileUploadResult  uploadFile(MultipartFile file) throws IOException {
         String originalFilename = file.getOriginalFilename(); // "abc.pdf"
         String key = FileUtils.generateKey(originalFilename);
         FileUtils.uploadFile(key, file.getBytes(), uploadPathPattern);
-        return uploadPathPattern+key;
+        return new FileUploadResult(uploadPathPattern+key , key);
 
 
     }

@@ -1,5 +1,6 @@
 package com.toyproject.backend.utils.storage;
 
+import com.toyproject.backend.utils.FileUploadResult;
 import com.toyproject.backend.utils.FileUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,8 +34,10 @@ public class S3StorageService implements StorageService{
 
     @Value("${cloud.aws.s3.prefix}")
     private  String uploadPathPattern;
+
+
     @Override
-    public String uploadFile(MultipartFile file) throws IOException {
+    public FileUploadResult uploadFile(MultipartFile file) throws IOException {
         String originalFilename = file.getOriginalFilename(); // "abc.pdf"
         String key = uploadPathPattern + FileUtils.generateKey(originalFilename);
         s3Client.putObject(
@@ -46,7 +49,8 @@ public class S3StorageService implements StorageService{
                 RequestBody.fromInputStream(file.getInputStream(), file.getSize())
                 // 업로드할 실제 파일 데이터 (바이트 스트림) , 파일 크기 (AWS가 얼마나 읽을지 알아야 함)
         );
-        return generatePresignedUrl(key);
+        String presignedUrl = generatePresignedUrl(key);
+        return new FileUploadResult(presignedUrl, key); // presignedUrl이 path 역할
     }
 
     private String generatePresignedUrl(String key) {

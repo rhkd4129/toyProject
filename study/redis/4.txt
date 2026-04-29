@@ -1,0 +1,10 @@
+자바의 직렬화 : 자바의 object를다른 컴퓨터의 자바 시스템에서 사용할 수 이도록 저장하는 것을 의미
+Object를 연속된 바이트스트림 형태로 포맷 변환하는 기술
+
+
+
+Redis stream 자료 구조 형태
+
+Stream은 key-value 형태의 자료구조로 랜덤 ID를 키로 가지고 Entry라는 Recorde형태의 데이터를 값으로 가진다.
+
+Redis Hash는 키 - 밸류 혀애의 Recored 타입

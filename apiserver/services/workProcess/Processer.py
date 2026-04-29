@@ -1,53 +1,102 @@
-import fitz
-import easyocr
+from fastapi import HTTPException
+from io import BytesIO
+
+import requests
 import numpy as np
-import os
-from datetime import datetime
-import re
-import json
-from apiserver.services.utils import BaseProcessor
-import sys
+import fitz , easyocr
 
-"""
-    채무자별 메타데이터(이름, 사건번호, 페이지 수, 시작 페이지)만 추출해 metadata.json으로 저장하는 클래스.
-    PDF 분리는 수행하지 않는다.
-    """
-class PDFMetadataExtractor(BaseProcessor):
-    DIVISION_WORD = "채무자"
-    CASE_WORD = "사건"
+import sys , os , json, re
 
-    def __init__(self):
-        # base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.getcwd()
-        # print(base_dir)
-        if getattr(sys, 'frozen', False):
-            base_dir = os.path.dirname(sys.executable)
-        else:
-            base_dir = os.getcwd()
+class Processer:
 
-
-        
-        pdfs = [f for f in os.listdir(base_dir) if f.lower().endswith('.pdf')]
-
-        if len(pdfs) == 0:
-            print("PDF 파일이 없습니다.")
-            sys.exit(1)
-        if len(pdfs) > 1:
-            print(f"PDF 파일이 2개 이상입니다: {pdfs}")
-            sys.exit(1)
-
-        self.pdf_path: str = os.path.join(base_dir, pdfs[0])
-        print(f"PDF 파일 감지: {self.pdf_path}")
-
-        today = datetime.now().strftime("%Y%m%d")
-        self.output_dir: str = os.path.join(base_dir, today)
-
+    def __init__(self, file_path, key):
+        self.file_path = file_path
+        self.key = key
         self.reader = easyocr.Reader(['ko', 'en'])
-        self.doc = fitz.open(self.pdf_path)
-        self.total_pages: int = len(self.doc)
+        self._download_file()  # 생성하자마자 바로 실행
 
-        # (이름, 사건번호, [페이지 인덱스, ...]) 리스트
-        self.people: list[tuple[str | None, str | None, list[int]]] = []
+    def _download_file(self):  # 외부에서 직접 쓸 게 아니면 _붙이기
+        with requests.get(self.file_path) as download:
+            if download.status_code != 200:
+                raise HTTPException(...)
+            self.doc = fitz.open(stream=download.content, filetype="pdf")
+            self.total_pages = len(self.doc)
 
+
+    def _extract_page_number(self, results: list) -> tuple[int | None, int | None]:
+        """
+        OCR 결과에서 '현재쪽/전체쪽' 패턴을 찾아 (current, total)을 반환.
+        쪽번호가 없으면 (None, None)을 반환한다.
+        """
+        full_text = " ".join(text for (_, text, _) in results)
+        match = re.search(r'(\d+)\s*/\s*(\d+)', full_text)
+        if match:
+            return int(match.group(1)), int(match.group(2))
+        return None, None
+    
+
+
+    def _extract_amount(self, results: list) -> str | None:
+        full_text = " ".join(text for (_, text, _) in results)
+        # 금 6,700,014원 / 금 6,700,014 원 / 금6,700,014원 전부 커버
+        match = re.search(r'[금긍]\s*([\d,]+)\s*원?', full_text)
+        if match:
+            return match.group(1)  # 숫자만 반환 ex) "6,700,014"
+        return None
+    
+
+
+    def _extract_decision_pay(self, results):
+        full_text = " ".join(text for (_, text, _) in results).replace(" ", "")
+        pattern = r'[청정]구[채재]권의표시'
+        return bool(re.search(pattern, full_text))  # match → search로 변경
+    
+
+    def _extract_page_number(self, results: list) -> tuple[int | None, int | None]:
+        """
+        OCR 결과에서 '현재쪽/전체쪽' 패턴을 찾아 (current, total)을 반환.
+        쪽번호가 없으면 (None, None)을 반환한다.
+        """
+        full_text = " ".join(text for (_, text, _) in results)
+        match = re.search(r'(\d+)\s*/\s*(\d+)', full_text)
+        if match:
+            return int(match.group(1)), int(match.group(2))
+        return None, None
+
+
+    def _extract_name(self, results: list) -> str | None:
+        """
+        OCR 결과에서 '채무자' 블록 바로 다음 블록의 텍스트를 이름으로 반환.
+        찾지 못하면 None을 반환한다.
+        """
+        prev_clean = ""
+        for (_, text, _) in results:
+            clean = text.replace(" ", "")
+            if prev_clean == self.DIVISION_WORD:
+                name = text.strip().split()[0] if text.strip() else text.strip()
+                return name[0:3]
+            prev_clean = clean
+        return None
+
+
+
+    def _extract_case_number(self, results: list) -> str | None:
+        """
+        사건번호
+        """
+        prev_prev_clean = ""
+        prev_clean = ""
+        for (_, text, _) in results:
+            clean = text.replace(" ", "")
+            combined = prev_prev_clean + prev_clean
+            if prev_clean == self.CASE_WORD or combined == self.CASE_WORD:
+                match = re.search(r'\d{4}[가-힣]+\d+', clean)
+                if match:
+                    return match.group(0)
+            prev_prev_clean = prev_clean
+            prev_clean = clean
+        return None
+    
 
     def _ocr_page(self, page_index: int, fraction: int = None, section: str = "bottom") -> list:
 
@@ -73,76 +122,9 @@ class PDFMetadataExtractor(BaseProcessor):
     
 
 
-
-    def _extract_page_number(self, results: list) -> tuple[int | None, int | None]:
-        """
-        OCR 결과에서 '현재쪽/전체쪽' 패턴을 찾아 (current, total)을 반환.
-        쪽번호가 없으면 (None, None)을 반환한다.
-        """
-        full_text = " ".join(text for (_, text, _) in results)
-        match = re.search(r'(\d+)\s*/\s*(\d+)', full_text)
-        if match:
-            return int(match.group(1)), int(match.group(2))
-        return None, None
-    
-    def _extract_amount(self, results: list) -> str | None:
-        full_text = " ".join(text for (_, text, _) in results)
-        
-        # 금 6,700,014원 / 금 6,700,014 원 / 금6,700,014원 전부 커버
-        match = re.search(r'[금긍]\s*([\d,]+)\s*원?', full_text)
-        if match:
-            return match.group(1)  # 숫자만 반환 ex) "6,700,014"
-        return None
-    def _extract_decision_pay(self, results):
-        full_text = " ".join(text for (_, text, _) in results).replace(" ", "")
-        pattern = r'[청정]구[채재]권의표시'
-        return bool(re.search(pattern, full_text))  # match → search로 변경
-    
-    def _extract_page_number(self, results: list) -> tuple[int | None, int | None]:
-        """
-        OCR 결과에서 '현재쪽/전체쪽' 패턴을 찾아 (current, total)을 반환.
-        쪽번호가 없으면 (None, None)을 반환한다.
-        """
-        full_text = " ".join(text for (_, text, _) in results)
-        match = re.search(r'(\d+)\s*/\s*(\d+)', full_text)
-        if match:
-            return int(match.group(1)), int(match.group(2))
-        return None, None
-    
-
-
-    def _extract_name(self, results: list) -> str | None:
-        """
-        OCR 결과에서 '채무자' 블록 바로 다음 블록의 텍스트를 이름으로 반환.
-        찾지 못하면 None을 반환한다.
-        """
-        prev_clean = ""
-        for (_, text, _) in results:
-            clean = text.replace(" ", "")
-            if prev_clean == self.DIVISION_WORD:
-                name = text.strip().split()[0] if text.strip() else text.strip()
-                return name[0:3]
-            prev_clean = clean
-        return None
-
-    def _extract_case_number(self, results: list) -> str | None:
-        """
-        사건번호
-        """
-        prev_prev_clean = ""
-        prev_clean = ""
-        for (_, text, _) in results:
-            clean = text.replace(" ", "")
-            combined = prev_prev_clean + prev_clean
-            if prev_clean == self.CASE_WORD or combined == self.CASE_WORD:
-                match = re.search(r'\d{4}[가-힣]+\d+', clean)
-                if match:
-                    return match.group(0)
-            prev_prev_clean = prev_clean
-            prev_clean = clean
-        return None
-   
-
+    # def extract_and_save(self)      # 추출하고 저장
+    # def parse_to_json(self)         # 파싱해서 json으로
+    # def save_as_json(self)          # json으로 저장
     def parse(self) -> None:
         print(f"총 {self.total_pages}페이지 감지됨\n")
 
@@ -210,11 +192,6 @@ class PDFMetadataExtractor(BaseProcessor):
 
         print(f"\n총 {len(self.people)}명 감지됨\n")
 
-
-    def save_metadata(self) -> None:
-        """파싱 결과를 metadata.json으로만 저장한다. PDF 분리는 수행하지 않는다."""
-        os.makedirs(self.output_dir, exist_ok=True)
-
         metadata_list = []
         for name, case_number, pages, amount in self.people:
             metadata_list.append({
@@ -226,19 +203,19 @@ class PDFMetadataExtractor(BaseProcessor):
             })
             print(f"   이름: {name} | 사건번호: {case_number} | {len(pages)}페이지 | 금액: {amount}")
 
-        meta_path = os.path.join(self.output_dir, "metadata.json")
-        with open(meta_path, 'w', encoding='utf-8') as f:
-            json.dump(metadata_list, f, ensure_ascii=False, indent=2)
+        return metadata_list
 
-        print(f"\n 메타데이터 저장 완료 → {meta_path}")
+
     def __enter__(self):
             return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
-    def run(self):
-        self.parse()
-        self.save_metadata()
-
-# with PDFMetadataExtractor("parameter.json") as reader:
-#     reader.run()
+        # upload = requests.put(
+        #     self.file_path,
+        #     data=download.content,
+        #     headers={"Content-Type": "application/pdf"}
+        # )
+        # if upload.status_code != 200:
+        #     raise HTTPException(status_code=400, detail=f"S3 업로드 실패: {upload.status_code}")
+        

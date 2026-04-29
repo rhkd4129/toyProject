@@ -1,8 +1,11 @@
 package com.toyproject.backend.domain.pdf.service;
 
 
+import com.toyproject.backend.domain.pdf.dto.PdfRedisRequest;
 import com.toyproject.backend.error.CommonException;
 import com.toyproject.backend.error.ErrorCode;
+import com.toyproject.backend.utils.FileUploadResult;
+import com.toyproject.backend.utils.RedisService;
 import com.toyproject.backend.utils.Result;
 import com.toyproject.backend.utils.storage.StorageService;
 import lombok.RequiredArgsConstructor;
@@ -20,16 +23,18 @@ public class PdfService {
 
     private final FastApiClient fastApiClient;
     private final StorageService storageService;
+    private final RedisService redisService;
     private final RedisTemplate<String, Object> redisTemplate;
 
 
     public Result createPdf(MultipartFile file) {
         try {
             Result result = new Result();
-            String filePath = storageService.uploadFile(file);
-            redisTemplate.opsForList().rightPush("producer:group", "value1");
-            String a = fastApiClient.sendPdfPath(filePath);
-            result.setMessage(a);
+            FileUploadResult fileUploadResult = storageService.uploadFile(file);
+            PdfRedisRequest pdfRedisRequest = new PdfRedisRequest(fileUploadResult.path(),fileUploadResult.key());
+            redisService.addStream(pdfRedisRequest);
+//            String a = fastApiClient.sendPdfPath(filePath);
+//            result.setMessage(a);
             return result;
         } catch (IOException e) {
             log.error("PDF 파일 처리 중 오류 발생: {}", e.getMessage());

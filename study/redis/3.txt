@@ -1,0 +1,37 @@
+RedisConfig의 역활
+
+Redis 는 데이터를 저장 조회시 직렬화 방식을 설정하는 파일
+Redis는 기본적으로 모든 데이터를 바이트 로 저장하는데ㅏ java 객체를 어캐 변환해서 넣을지 정의 하는 것
+
+
+ StringRedisSerializer stringSerializer = new StringRedisSerializer();
+ JAVA STRING => 바이트 변환으로 해주는 애
+
+
+template.setKeySerializer(new StringRedisSerializer());      // 키 → 문자열
+template.setValueSerializer(jsonSerializer);                 // 값 → JSON
+template.setHashKeySerializer(new StringRedisSerializer());  // Hash 키 → 문자열
+template.setHashValueSerializer(jsonSerializer);             // Hash 값 → JSON
+
+
+GenericJackson2JsonRedisSerializer는 값을 저장시 타입 정보를 같이 저장
+"taskId" : ["java.lang.String", "abc"]
+
+
+일반 Redis 캐시(opsForValue, opsForHash 등)에서 객체를 통째로 넣을 때는 GenericJackson2JsonRedisSerializer가 맞는데,
+
+근데 Stream은 구조가 다르다
+
+일반 캐시 - 값 자체가 객체
+key: "user:1"
+value: { "name": "홍길동", "age": 20 }  ← 객체 통째로
+GenericJackson2JsonRedisSerializer 가 적합
+#################################################################
+Stream - 원래부터 Map 구조
+stream: "pdf-event"
+entry: {
+    "taskId": "abc",        ← 무조건 key-value 쌍
+    "filePath": "/uploads"
+}
+
+→ 이미 Map이라서 String으로 충분
