@@ -4,6 +4,7 @@ import sys
 import fitz
 import easyocr
 import numpy as np
+from datetime import datetime
 
 
 class PDFSplitter:
@@ -29,7 +30,8 @@ class PDFSplitter:
         self.pdf_path: str = self._find_pdf()
         print(f"처리할 PDF: {self.pdf_path}")
 
-        self.output_dir: str = os.path.join(self.base_dir, "output")
+        # self.output_dir: str = os.path.join(self.base_dir, "output")
+        self.output_dir: str = os.path.join(self.base_dir, datetime.now().strftime("%Y%m%d_%H"))
 
         self.reader = easyocr.Reader(['ko', 'en'])
         self.doc = fitz.open(self.pdf_path)
@@ -142,18 +144,14 @@ class PDFSplitter:
                 i += 1
 
             else:
-                # 예외: 1이 아닌 쪽번호가 갑자기 등장 → 직전 항목에 포함
-                print(f"    → 예외({current}/{total}), 직전 항목에 포함")
                 if entries:
+                    # 예외: 1이 아닌 쪽번호가 갑자기 등장 → 직전 항목에 포함
                     prev_idx, prev_total = entries[-1]
-                    if prev_total is not None:
-                        entries[-1] = (prev_idx, prev_total + 1)
-                    else:
-                        entries[-1] = (prev_idx, 2)  # 한 장짜리였던 경우
+                    entries[-1] = (prev_idx, prev_total + 1)
                 i += 1
 
         print(f"\n  1패스 완료 — {len(entries)}명 감지됨")
-
+        #
         # ── 2패스: 이름 스캔 ──
         print("\n=== 2패스: 이름 스캔 ===")
 
@@ -203,10 +201,16 @@ class PDFSplitter:
         print("\n모든 PDF 분리 완료!")
 
     def run(self) -> None:
-        """parse → save를 순서대로 실행하는 편의 메서드."""
+        start = datetime.now()
+        print(f"시작: {start.strftime('%H:%M:%S')}")
+
         self.parse()
         self.save()
 
+        end = datetime.now()
+        elapsed = end - start
+        minutes, seconds = divmod(elapsed.seconds, 60)
+        print(f"완료: {end.strftime('%H:%M:%S')} (소요시간: {minutes}분 {seconds}초)")
     def close(self) -> None:
         """열려 있는 PDF 문서를 닫는다."""
         self.doc.close()
@@ -234,3 +238,6 @@ if __name__ == "__main__":
         print(f"\n❌ 오류 발생: {e}")
     finally:
         input("\n종료하려면 Enter를 누르세요...")
+
+
+        #pyinstaller --onedir --console splitter.py

@@ -4,7 +4,7 @@ import sys
 import fitz
 import easyocr
 import numpy as np
-
+from datetime import datetime
 
 class PDFSplitter:
 
@@ -170,9 +170,16 @@ class PDFSplitter:
         print("\n모든 PDF 분리 완료!")
 
     def run(self) -> None:
-        """parse → save를 순서대로 실행하는 편의 메서드."""
+        start = datetime.now()  
+        print(f"시작: {start.strftime('%H:%M:%S')}")
+
         self.parse()
         self.save()
+
+        end = datetime.now()
+        elapsed = end - start
+        minutes, seconds = divmod(elapsed.seconds, 60)
+        print(f"완료: {end.strftime('%H:%M:%S')} (소요시간: {minutes}분 {seconds}초)")
 
     def close(self) -> None:
         """열려 있는 PDF 문서를 닫는다."""
