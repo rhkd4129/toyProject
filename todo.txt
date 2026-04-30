@@ -1,0 +1,2 @@
+vue에서 pdfForm에서 v-model 부분 
+메시지 큐에 저정할 값 filepath와 name?

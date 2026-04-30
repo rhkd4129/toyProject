@@ -1,26 +1,43 @@
 from fastapi import HTTPException
 from io import BytesIO
-
+from urllib.parse import urlparse
 import requests
 import numpy as np
 import fitz , easyocr
+import logging
 
 import sys , os , json, re
 
 class Processer:
-
-    def __init__(self, file_path, key):
+    DIVISION_WORD = "채무자"
+    CASE_WORD = "사건"
+    def __init__(self, file_path, key,reader):
         self.file_path = file_path
         self.key = key
-        self.reader = easyocr.Reader(['ko', 'en'])
-        self._download_file()  # 생성하자마자 바로 실행
+        self.reader = reader  # 외부에서 받기, 새로 생성 X
+        # self.reader = easyocr.Reader(['ko', 'en'])
+        self._load_file()  # 생성하자마자 바로 실행
+        self.people: list[tuple[str | None, str | None, list[int]]] = []
 
-    def _download_file(self):  # 외부에서 직접 쓸 게 아니면 _붙이기
-        with requests.get(self.file_path) as download:
-            if download.status_code != 200:
-                raise HTTPException(...)
-            self.doc = fitz.open(stream=download.content, filetype="pdf")
-            self.total_pages = len(self.doc)
+    def _load_file(self):
+        parsed = urlparse(self.file_path)
+        
+        # HTTP/HTTPS URL인 경우
+        if parsed.scheme in ("http", "https"):
+            print("== prod env ==")
+            with requests.get(self.file_path) as download:
+                if download.status_code != 200:
+                    raise HTTPException(...)
+                self.doc = fitz.open(stream=download.content, filetype="pdf")
+        
+        # 로컬 경로인 경우
+        else:
+            print("== local env ==")
+            if not os.path.exists(self.file_path):
+                raise FileNotFoundError(f"파일 없음: {self.file_path}")
+            self.doc = fitz.open(self.file_path)  # fitz는 로컬 경로 직접 지원
+        self.total_pages = len(self.doc)
+        print("파일 로드 완료...")
 
 
     def _extract_page_number(self, results: list) -> tuple[int | None, int | None]:
@@ -50,18 +67,7 @@ class Processer:
         full_text = " ".join(text for (_, text, _) in results).replace(" ", "")
         pattern = r'[청정]구[채재]권의표시'
         return bool(re.search(pattern, full_text))  # match → search로 변경
-    
 
-    def _extract_page_number(self, results: list) -> tuple[int | None, int | None]:
-        """
-        OCR 결과에서 '현재쪽/전체쪽' 패턴을 찾아 (current, total)을 반환.
-        쪽번호가 없으면 (None, None)을 반환한다.
-        """
-        full_text = " ".join(text for (_, text, _) in results)
-        match = re.search(r'(\d+)\s*/\s*(\d+)', full_text)
-        if match:
-            return int(match.group(1)), int(match.group(2))
-        return None, None
 
 
     def _extract_name(self, results: list) -> str | None:
@@ -99,7 +105,10 @@ class Processer:
     
 
     def _ocr_page(self, page_index: int, fraction: int = None, section: str = "bottom") -> list:
-
+        """
+        지정한 페이지를 300dpi로 래스터화한 뒤 OCR 결과를 반환한다.
+        fraction 지정 시 해당 비율만큼 상단 또는 하단을 크롭해서 OCR한다.
+        """
         page = self.doc[page_index]
         pix = page.get_pixmap(dpi=300)
         img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
@@ -107,25 +116,23 @@ class Processer:
         )
 
         if fraction is None:
-            # 크롭 없이 전체 페이지 OCR
             cropped = img_array
         else:
             h = img_array.shape[0]
             if section == "bottom":
-                # 하단 1/fraction 크롭
                 cropped = img_array[h * (fraction - 1) // fraction:, :, :]
             else:
-                # 상단 1/fraction 크롭
                 cropped = img_array[:h // fraction, :, :]
 
         return self.reader.readtext(cropped)
-    
+   
 
 
     # def extract_and_save(self)      # 추출하고 저장
     # def parse_to_json(self)         # 파싱해서 json으로
     # def save_as_json(self)          # json으로 저장
     def parse(self) -> None:
+
         print(f"총 {self.total_pages}페이지 감지됨\n")
 
         current_name: str | None = None
@@ -137,8 +144,7 @@ class Processer:
         while i < self.total_pages:
             print(f"{i + 1}페이지 OCR 읽는 중...")
             results = self._ocr_page(i)  # 전체 페이지 (쪽번호/이름/사건번호 추출용)
-            current, total = self._extract_page_number(results)
-            
+            current, total = self._extract_page_number(results)            
             if current == 1:
                 if current_pages:
                     self.people.append((current_name, current_case, current_pages, current_amount))

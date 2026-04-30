@@ -1,9 +1,9 @@
 
 from contextlib import asynccontextmanager
-from redisConfig import consume
+from stream_consumer import consume
 import asyncio
 import redis.asyncio as redis
-
+import easyocr
 
 
 

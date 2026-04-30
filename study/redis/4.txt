@@ -8,3 +8,28 @@ Redis stream 자료 구조 형태
 Stream은 key-value 형태의 자료구조로 랜덤 ID를 키로 가지고 Entry라는 Recorde형태의 데이터를 값으로 가진다.
 
 Redis Hash는 키 - 밸류 혀애의 Recored 타입
+
+
+Spring 에서 consumer를 소비하는 방법은
+크게 폴링 ,Block, StreamListener 방법이 있다,
+
+StreamListener
+
+StreamListener와 Consumer는 1:1로 연결을 맺는 구조이다.
+StreamListener와 Consumer가 관계지어지면 Subscription 객체를 생성한다.
+
+StreamListener1 +  Consumer1   = Subscription1
+
+StreamListener2 +  Consumer2   = Subscription2
+...
+
+만약 
+
+하나의ㅏ StreamListener에 여러 Consumer가 등록 되어 있을 경우는 모든 Consumer가 받은 데이터는 onMessage의 동일 처리를 거치게 된다.
+Subscription2객체는 Consumer가 StreamListener 연결당 하나씩 생성된다.
+
+                    (Subscription)Consumer1
+StreamListener      (Subscription)Consumer2
+                    (Subscription)Consumer3
+
+

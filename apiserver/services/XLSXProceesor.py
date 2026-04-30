@@ -6,23 +6,28 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from datetime import datetime
 class XLSXProceesor:
 
     DIVISION_NAME = "채무자"
     DIVISION_NUMBER ="사건번호"
-    XLSL_FILE_NAME = "{year}_사건부.xlsx"
-    OUTPUT_PATH=""
-    FONT_PATH = "NANUMGOTHIC.TTF"
+    XLSL_FILE_NAME = r"C:\Server\{year}사건부.xlsx"
+    OUTPUT_PATH = r"C:\Server\zzz.xlsx"
+    FONT_PATH = r"C:\Server\NANUMGOTHIC.TTF"
     HEADER    = ["담당자", "채권번호", "채무자", "사건명", "사건번호", "법원", "결정일", "결정금액"]
 
     def __init__(self,metadata_list):
         
         self.current_year = datetime.now().year
-        self.metadata_list = metadata_list
+        self.metadata = metadata_list
         self.XLSL_FILE_NAME = self.XLSL_FILE_NAME.format(year=self.current_year)  # 덮어쓰기
         self.sheets = self._load_xlsx(self.XLSL_FILE_NAME)  # ← 추가 필요
+        now              = datetime.now()
+        self.today_str   = now.strftime("%Y-%m-%d")
 
         pdfmetrics.registerFont(TTFont("NanumGothic", self.FONT_PATH))
+
+        print("XLSXProceesor 초기화 완료")
 
 
     def _search_in_sheets(self, target_name: str, target_number: str, item: dict) -> bool:
@@ -54,7 +59,7 @@ class XLSXProceesor:
     
 
     def find_number(self):
-        for item in self.metadata_list:
+        for item in self.metadata:
             target_name = item.get('name')
             target_number = item.get('case_number')
             if target_name is None or target_number is None:
@@ -154,7 +159,7 @@ class XLSXProceesor:
                 info     = item.get("info", {})
                 row_data = [
                     info.get("담당자"),
-                    self.format_bond_number(info.get("채권번호")),
+                    self._format_bond_number(info.get("채권번호")),
                     info.get("채무자"),
                     info.get("사건"),
                     info.get("사건번호"),
@@ -197,7 +202,7 @@ class XLSXProceesor:
             row_data = [
                 row.get("sheet"),
                 row.get("담당자"),
-                self.format_bond_number(row.get("채권번호")),
+                self._format_bond_number(row.get("채권번호")),
                 row.get("채무자"),
                 row.get("사건"),
                 row.get("사건번호"),
@@ -216,6 +221,8 @@ class XLSXProceesor:
         # ── 저장 ──
         wb.save(self.OUTPUT_PATH)
         print(f"저장 완료: {self.OUTPUT_PATH}")
+        return self.OUTPUT_PATH
+        
 
 
 

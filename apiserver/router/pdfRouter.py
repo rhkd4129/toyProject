@@ -1,11 +1,5 @@
 
-import requests
-#from apiserver.pdfRequest.PdfRequest import PdfRequest
-from contextlib import asynccontextmanager
 from fastapi import FastAPI
-import asyncio
-import redis.asyncio as redis
-from redisConfig import consume
 from fastapi import APIRouter
 
 pdf_router = APIRouter(prefix="/pdf")
