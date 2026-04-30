@@ -40,8 +40,8 @@ const resetForm = () => {
                   v-model="formData"
                   :rules="rules.pdfFile"
                   label="PDF 업로드"
-                  accept="image/*"
-                  prepend-icon="mdi-camera"
+                  accept="application/pdf"
+                  prepend-icon="mdi-file-pdf-box"
                   outlined
                   dense
               ></v-file-input>
