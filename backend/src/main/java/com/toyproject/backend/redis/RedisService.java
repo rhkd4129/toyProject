@@ -1,8 +1,9 @@
-package com.toyproject.backend.utils;
+package com.toyproject.backend.redis;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.toyproject.backend.domain.pdf.dto.PdfRedisRequest;
+import com.toyproject.backend.utils.StreamKey;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.RecordId;

@@ -1,4 +1,4 @@
-package com.toyproject.backend.utils.storage;
+package com.toyproject.backend.storage;
 
 import com.toyproject.backend.utils.FileUploadResult;
 import com.toyproject.backend.utils.FileUtils;
@@ -15,10 +15,8 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
-import java.util.UUID;
 
 @Service
 @Profile("prod")
@@ -51,6 +49,11 @@ public class S3StorageService implements StorageService{
         );
         String presignedUrl = generatePresignedUrl(key);
         return new FileUploadResult(presignedUrl, key); // presignedUrl이 path 역할
+    }
+
+    @Override
+    public void downloadFile() {
+
     }
 
     private String generatePresignedUrl(String key) {

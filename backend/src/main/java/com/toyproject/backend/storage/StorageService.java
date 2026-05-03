@@ -1,4 +1,4 @@
-package com.toyproject.backend.utils.storage;
+package com.toyproject.backend.storage;
 
 import com.toyproject.backend.utils.FileUploadResult;
 import org.springframework.stereotype.Service;
@@ -11,4 +11,6 @@ import java.io.IOException;
 public interface StorageService {
 
     public FileUploadResult uploadFile(MultipartFile file) throws IOException;
+
+    public void downloadFile();
 }

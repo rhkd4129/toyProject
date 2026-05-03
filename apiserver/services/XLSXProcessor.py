@@ -7,27 +7,33 @@ from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from datetime import datetime
-class XLSXProceesor:
+class XLSXProcessor:
 
     DIVISION_NAME = "채무자"
     DIVISION_NUMBER ="사건번호"
-    XLSL_FILE_NAME = r"C:\Server\{year}사건부.xlsx"
-    OUTPUT_PATH = r"C:\Server\zzz.xlsx"
-    FONT_PATH = r"C:\Server\NANUMGOTHIC.TTF"
     HEADER    = ["담당자", "채권번호", "채무자", "사건명", "사건번호", "법원", "결정일", "결정금액"]
 
-    def __init__(self,metadata_list):
+
+    XLSX_FILE_NAME = r"C:\Server\PDF\{year}사건부.xlsx"
+    OUTPUT_PATH = r"C:\Server\{today}.xlsx"
+    FONT_PATH = r"C:\Server\PDF\NANUMGOTHIC.TTF"
+    
+    
+
+    def __init__(self, metadata_list):
+            now = datetime.now()
+            self.current_year = now.year
+            self.metadata = metadata_list
+            self.today_str = now.strftime("%Y-%m-%d")
+            pdfmetrics.registerFont(TTFont("NanumGothic", self.FONT_PATH))
+
+            # 클래스 변수 참조 후 인스턴스 변수로 별도 저장
+            self.xlsx_file_name = self.XLSL_FILE_NAME.format(year=self.current_year)
+            self.output_path = self.OUTPUT_PATH.format(today=now.strftime("%Y%m%d_%H"))
+            self.sheets = self._load_xlsx(self.xlsx_file_name)
         
-        self.current_year = datetime.now().year
-        self.metadata = metadata_list
-        self.XLSL_FILE_NAME = self.XLSL_FILE_NAME.format(year=self.current_year)  # 덮어쓰기
-        self.sheets = self._load_xlsx(self.XLSL_FILE_NAME)  # ← 추가 필요
-        now              = datetime.now()
-        self.today_str   = now.strftime("%Y-%m-%d")
 
-        pdfmetrics.registerFont(TTFont("NanumGothic", self.FONT_PATH))
-
-        print("XLSXProceesor 초기화 완료")
+            print("XLSXProceesor 초기화 완료")
 
 
     def _search_in_sheets(self, target_name: str, target_number: str, item: dict) -> bool:
@@ -96,8 +102,8 @@ class XLSXProceesor:
 
     def create_xlsx(self):
 
-        if os.path.exists(self.OUTPUT_PATH):
-            os.remove(self.OUTPUT_PATH)  # 기존 파일 삭제
+        if os.path.exists(self.output_path):
+            os.remove(self.output_path)  # 기존 파일 삭제
 
         wb = Workbook()
         if "Sheet" in wb.sheetnames:
@@ -219,9 +225,9 @@ class XLSXProceesor:
                     cell.fill = yellow_fill
 
         # ── 저장 ──
-        wb.save(self.OUTPUT_PATH)
-        print(f"저장 완료: {self.OUTPUT_PATH}")
-        return self.OUTPUT_PATH
+        wb.save(self.output_path)
+        print(f"저장 완료: {self.output_path}")
+        return self.output_path
         
 
 

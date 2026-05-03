@@ -1,4 +1,4 @@
-package com.toyproject.backend.utils.storage;
+package com.toyproject.backend.storage;
 import com.toyproject.backend.utils.FileUploadResult;
 import com.toyproject.backend.utils.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,13 +15,20 @@ public class LocalStorageService implements StorageService{
     @Value("${spring.servlet.multipart.location}")
     private  String uploadPathPattern;
 
+
+
     @Override
     public FileUploadResult  uploadFile(MultipartFile file) throws IOException {
         String originalFilename = file.getOriginalFilename(); // "abc.pdf"
         String key = FileUtils.generateKey(originalFilename);
         FileUtils.uploadFile(key, file.getBytes(), uploadPathPattern);
         return new FileUploadResult(uploadPathPattern+key , key);
+    }
 
+    @Override
+    public void downloadFile() {
 
     }
+
+
 }

@@ -4,32 +4,78 @@ Object를 연속된 바이트스트림 형태로 포맷 변환하는 기술
 
 
 Redis stream 자료 구조 형태
-
 Stream은 key-value 형태의 자료구조로 랜덤 ID를 키로 가지고 Entry라는 Recorde형태의 데이터를 값으로 가진다.
-
 Redis Hash는 키 - 밸류 혀애의 Recored 타입
 
 
 Spring 에서 consumer를 소비하는 방법은
 크게 폴링 ,Block, StreamListener 방법이 있다,
 
-StreamListener
-
-StreamListener와 Consumer는 1:1로 연결을 맺는 구조이다.
-StreamListener와 Consumer가 관계지어지면 Subscription 객체를 생성한다.
-
-StreamListener1 +  Consumer1   = Subscription1
-
-StreamListener2 +  Consumer2   = Subscription2
-...
-
-만약 
-
-하나의ㅏ StreamListener에 여러 Consumer가 등록 되어 있을 경우는 모든 Consumer가 받은 데이터는 onMessage의 동일 처리를 거치게 된다.
-Subscription2객체는 Consumer가 StreamListener 연결당 하나씩 생성된다.
-
-                    (Subscription)Consumer1
-StreamListener      (Subscription)Consumer2
-                    (Subscription)Consumer3
 
 
+
+1. Redis Streams 기초 (Spring 없이 순수 Redis)
+
+1-1. Stream이란? — 로그 구조 데이터 타입
+1-2. XADD — 메시지 적재
+1-3. XREAD — 메시지 읽기
+1-4. Message ID — 1234567890-0 구조 이해
+1-5. XLEN, XRANGE, XREVRANGE — 스트림 조회
+1-6. Pub/Sub과의 차이 — push vs polling, 영속성
+
+
+2. Consumer Group 개념
+
+2-1. Consumer Group이란? — 분산 소비
+2-2. XGROUP CREATE — 그룹 생성
+2-3. XREADGROUP — 그룹 기반 읽기
+2-4. Pending Entry — ACK 전 상태
+2-5. XACK — 처리 완료 확인
+2-6. XPENDING — 미처리 메시지 조회
+2-7. XCLAIM — 죽은 소비자의 메시지 뺏어오기
+2-8. XAUTOCLAIM — 자동 재할당 (Redis 6.2+)
+
+
+3. Spring Data Redis — 기본 세팅
+
+3-1. RedisConnectionFactory — Lettuce vs Jedis
+3-2. RedisTemplate 설정 — 직렬화(Serializer) 종류와 선택
+3-3. StreamOperations — opsForStream() 기본 CRUD
+3-4. MapRecord vs ObjectRecord — 메시지 타입 차이
+
+
+4. StreamMessageListenerContainer (소비자 핵심)
+
+4-1. 컨테이너 생성 — StreamMessageListenerContainer.create()
+4-2. StreamMessageListenerContainerOptions — pollTimeout, batchSize, executor
+4-3. StreamListener — 메시지 수신 콜백 구현
+4-4. StreamOffset + ReadOffset — 어디서부터 읽을지
+4-5. receive() — 단순 구독 (그룹 없이)
+4-6. receive(Consumer, ...) — Consumer Group 기반 구독
+4-7. Subscription — 구독 핸들 관리 (취소, 상태 확인)
+4-8. start() / stop() — 생명주기
+
+
+5. ACK 처리 전략
+
+5-1. 자동 ACK vs 수동 ACK — 언제 뭘 써야 하나
+5-2. acknowledge() — 수동 ACK 코드
+5-3. ACK 안 했을 때 — Pending 재처리 흐름
+5-4. 멱등성(Idempotency) — 같은 메시지 두 번 처리 방지
+
+
+6. 에러 처리
+
+6-1. ErrorHandler — 에러 발생 시 콜백
+6-2. 기본 동작 — 에러 나면 구독 취소됨 (주의!)
+6-3. 취소 방지 — cancelOnError predicate 설정
+6-4. Dead Letter 패턴 — 실패 메시지 별도 스트림으로 이동
+
+
+7. 실전 패턴
+
+7-1. ApplicationRunner로 앱 시작 시 자동 구독
+7-2. Consumer Group + 수동 ACK 완성 패턴
+7-3. 스케일 아웃 — 인스턴스 여러 개 띄울 때 고려사항
+7-4. Stream 크기 관리 — MAXLEN, XTRIM
+7-5. 모니터링 — XINFO STREAM, XINFO GROUPS
