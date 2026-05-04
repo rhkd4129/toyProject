@@ -15,7 +15,7 @@ class XLSXProcessor:
 
 
     XLSX_FILE_NAME = r"C:\Server\PDF\{year}사건부.xlsx"
-    OUTPUT_PATH = r"C:\Server\{today}.xlsx"
+    OUTPUT_PATH = r"C:\Server\PDF\{today}.xlsx"
     FONT_PATH = r"C:\Server\PDF\NANUMGOTHIC.TTF"
     
     
@@ -28,7 +28,7 @@ class XLSXProcessor:
             pdfmetrics.registerFont(TTFont("NanumGothic", self.FONT_PATH))
 
             # 클래스 변수 참조 후 인스턴스 변수로 별도 저장
-            self.xlsx_file_name = self.XLSL_FILE_NAME.format(year=self.current_year)
+            self.xlsx_file_name = self.XLSX_FILE_NAME.format(year=self.current_year)
             self.output_path = self.OUTPUT_PATH.format(today=now.strftime("%Y%m%d_%H"))
             self.sheets = self._load_xlsx(self.xlsx_file_name)
         

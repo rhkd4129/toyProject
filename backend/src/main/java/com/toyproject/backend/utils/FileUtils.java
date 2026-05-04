@@ -19,19 +19,18 @@ public class FileUtils {
 //        return transformLevel.getTransformLevel()+"."+fileType.getExtension();
 //    }
 
-    public static void uploadFile(String originalName, byte[] fileData, String path) throws IOException {
+    public static void uploadFile(String fileName, byte[] fileData, String path) throws IOException {
         File fileDirectory = new File(path);
         if (!fileDirectory.exists()) {
             fileDirectory.mkdirs();
         }
-        File target = new File(path, originalName);
+        File target = new File(path, fileName);
         FileCopyUtils.copy(fileData, target);
     }
 
-    public static String generateKey(String originalFilename){
+    public static String buildFileName(String taskId, String originalFilename){
         String ext = originalFilename.substring(originalFilename.lastIndexOf(".")); // ".pdf"
-        String nameWithoutExt = originalFilename.substring(0, originalFilename.lastIndexOf(".")); // "abc"
-        return nameWithoutExt + "_" + UUID.randomUUID() + ext;
+        return  taskId + ext;
 
     }
 

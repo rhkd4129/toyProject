@@ -1,8 +1,8 @@
 import asyncio
 import redis.asyncio as redis
 from services.Processer import Processer
-from apiserver.services.XLSXProcessor import XLSXProceesor
-import fitz , easyocr
+from services.XLSXProcessor import XLSXProcessor
+import easyocr
 '''
 Redis는 기본적으로 데이터를 bytes로 반환해요
 이걸 True로 하면 자동으로 String으로 변환해줌
@@ -42,21 +42,24 @@ async def consume():
 # stream_consumer.py
 async  def process_message(fields: dict):
     print(f"process_message 진입: {fields}")
-    url = fields["filePath"].strip('"')
-    key = fields["fileName"].strip('"')
+    taskId = fields["taskId"].strip('"')
+    filePath = fields["filePath"].strip('"')
+    originalFileName = fields["originalFileName"].strip('"')
 
     try:
-        with Processer(url, key, reader=READER) as processer:
+        with Processer(filePath, taskId, reader=READER) as processer:
             metadata_list = processer.parse()
 
-        with XLSXProceesor(metadata_list) as xlsx_processor:
+        with XLSXProcessor(metadata_list) as xlsx_processor:
             xlsx_processor.find_number()
             output = xlsx_processor.create_xlsx()
                     # ✅ 성공 → Spring으로 결과 전송
         await r.xadd("pdf:results", {
-            "taskId": key,
-            "status": "done",
-            "resultPath": output
+            "taskId": taskId,
+            "filePath": output,
+            "originalFileName": originalFileName
+            # "status": "done",
+            # "resultPath": output
         })
         
 
@@ -66,8 +69,8 @@ async  def process_message(fields: dict):
         print(f"[ERROR] process_message 실패: {e}")
         traceback.print_exc()
          # ✅ 실패 → Spring으로 에러 전송
-        await r.xadd("result:events", {
-            "taskId": key,
-            "status": "error",
-            "message": str(e)
-        })
+        # await r.xadd("result:events", {
+        #     "taskId": key,
+        #     "status": "error",
+        #     "message": str(e)
+        # })

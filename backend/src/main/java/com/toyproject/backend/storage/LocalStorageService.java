@@ -1,4 +1,5 @@
 package com.toyproject.backend.storage;
+import com.toyproject.backend.domain.pdf.dto.PdfRedisRequest;
 import com.toyproject.backend.utils.FileUploadResult;
 import com.toyproject.backend.utils.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -6,6 +7,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 
 @Service
@@ -16,17 +18,17 @@ public class LocalStorageService implements StorageService{
     private  String uploadPathPattern;
 
 
-
     @Override
-    public FileUploadResult  uploadFile(MultipartFile file) throws IOException {
+    public PdfRedisRequest uploadFile(String taskId, MultipartFile file) throws IOException {
         String originalFilename = file.getOriginalFilename(); // "abc.pdf"
-        String key = FileUtils.generateKey(originalFilename);
-        FileUtils.uploadFile(key, file.getBytes(), uploadPathPattern);
-        return new FileUploadResult(uploadPathPattern+key , key);
+        String fileName= FileUtils.buildFileName(taskId,originalFilename);
+        FileUtils.uploadFile(fileName, file.getBytes(), uploadPathPattern);
+        String filePath = Paths.get(uploadPathPattern, fileName).toString();
+        return new PdfRedisRequest(taskId, filePath,originalFilename);
     }
 
     @Override
-    public void downloadFile(String downloadPath) throws IOException {
+    public void downloadFile(String downloadPath){
         return;
 //        Path path = Paths.get(downloadPath);
 //        Resource resource= UrlResource(path.toUri());
