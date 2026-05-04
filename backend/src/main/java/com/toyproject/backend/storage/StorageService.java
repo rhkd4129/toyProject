@@ -12,5 +12,5 @@ public interface StorageService {
 
     public FileUploadResult uploadFile(MultipartFile file) throws IOException;
 
-    public void downloadFile();
+    public void downloadFile(String downloadPath);
 }

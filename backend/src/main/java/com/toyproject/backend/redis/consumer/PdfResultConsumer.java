@@ -22,7 +22,7 @@ public class PdfResultConsumer implements StreamListener<String, MapRecord<Strin
             log.info("📩 LOG 수신 - taskId: {} | status: {} | log: {}", taskId, status, resultPath);
 
 
-            storageService.downloadFile();
+//            storageService.downloadFile();
 
 
 //            // ✅ 1. DB에 작업 결과 저장

@@ -26,8 +26,8 @@ public class PdfController {
 //    각 파트마다 Content-Type이 다를 수 있어서 이걸 구분해서 처리해줌
     @PostMapping("/create")
     public ResponseEntity<?> createPdf(@RequestParam("newPdf") MultipartFile newPdf) {
-        Result result = pdfService.createPdf(newPdf);
         log.info(" === createPdf 진입 === ");
+        Result result = pdfService.createPdf(newPdf);
         return new ResponseEntity<>(result,HttpStatus.OK);
     }
 //    Spring이 FastAPI를 호출하고 응답이 올 때까지 그냥 기다림.

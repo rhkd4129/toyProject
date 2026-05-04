@@ -52,7 +52,7 @@ public class S3StorageService implements StorageService{
     }
 
     @Override
-    public void downloadFile() {
+    public void downloadFile(String downloadPath) {
 
     }
 

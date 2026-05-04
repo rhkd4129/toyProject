@@ -26,9 +26,18 @@ public class LocalStorageService implements StorageService{
     }
 
     @Override
-    public void downloadFile() {
+    public void downloadFile(String downloadPath) throws IOException {
+        return;
+//        Path path = Paths.get(downloadPath);
+//        Resource resource= UrlResource(path.toUri());
 
     }
 
 
 }
+//PhotoResultResponseDTO photoResultResponseDTO = photoService.selectPhoto(currentMember, num,kind);
+//String contentDisposition = "attachment; filename=\"" + photoResultResponseDTO.getEncodedFilename() + "\"";
+//        return ResponseEntity.ok()
+//                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
+//                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+//                .body(photoResultResponseDTO.getResource());
