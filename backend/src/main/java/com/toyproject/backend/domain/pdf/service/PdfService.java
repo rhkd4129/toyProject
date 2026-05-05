@@ -3,9 +3,11 @@ package com.toyproject.backend.domain.pdf.service;
 
 import com.toyproject.backend.Emitter.EmitterRepository;
 import com.toyproject.backend.domain.pdf.dto.PdfRedisRequest;
+import com.toyproject.backend.domain.pdf.dto.PdfResponseDTO;
 import com.toyproject.backend.error.CommonException;
 import com.toyproject.backend.error.ErrorCode;
 import com.toyproject.backend.redis.RedisService;
+import com.toyproject.backend.utils.FileUtils;
 import com.toyproject.backend.utils.Result;
 import com.toyproject.backend.storage.StorageService;
 import com.toyproject.backend.Emitter.SseEmitterService;
@@ -17,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.UUID;
 
 
@@ -36,11 +39,10 @@ public class PdfService {
 
     public PdfRedisRequest createPdf(MultipartFile file) {
         try {
-            Result result = new Result();
             String taskId = UUID.randomUUID().toString();
+            //TODO 리팩토링? storageService.uploadFile
             PdfRedisRequest pdfRedisRequest = storageService.uploadFile(taskId, file);
-//            redisService.addStream(pdfRedisRequest);
-            sseEmitterService.createEmitter(taskId);
+            redisService.addStream(pdfRedisRequest);
             return pdfRedisRequest;
         } catch (IOException e) {
             log.error("PDF 파일 처리 중 오류 발생: {}", e.getMessage());
@@ -49,13 +51,8 @@ public class PdfService {
     }
 
 
-    public void getPdf(String taskId){
-//        PdfResponseDTO
-//         SseEmitter emitter = emitters.get(taskId);
-
-
-
-
+    public PdfResponseDTO getPdf(String taskId) throws MalformedURLException {
+        return storageService.downloadFile(taskId);
 
     }
 
