@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, ref } from "vue";
+import {computed, reactive, ref, watch} from "vue";
 import {useStore} from "vuex";
 import {useRouter} from "vue-router";
 
@@ -7,7 +7,7 @@ const valid = ref(false);
 const store = useStore()
 const router = useRouter();
 const formData = ref({pdfFile: null,});
-
+const taskId = computed(()=>store.state.pdfStore.pdfTaskId)
 
 const rules = reactive({
   pdfFile: [
@@ -19,7 +19,8 @@ const rules = reactive({
 const submitForm = async ()=>{
   try{
     await store.dispatch("pdfStore/addPdf",formData.value)
-    router.push({ name: "posts" });
+    await store.dispatch("pdfStore/connectEmitter");
+    // router.push({ name: "posts" });
   }catch (error){
     console.log(error)
   }
@@ -29,6 +30,31 @@ const resetForm = () => {
   formData.value.pdfFile = null;
   valid.value = false;
 };
+
+const downloadPdf = async ()=>{
+  const taskId= "a"
+  const pdf = await store.dispatch("pdfStore/getPdf",taskId)
+  const a = document.createElement('a')
+  a.href = pdf.blobUrl
+  a.download = pdf.fileName
+  a.click()
+  URL.revokeObjectURL(pdf.blobUrl)
+// 메모리 해제 (중요!)
+}
+  watch(taskId, async(newVal, oldVal)  => {
+    console.log(newVal, oldVal)
+    const pdf = await store.dispatch("pdfStore/getPdf",newVal)
+    const a = document.createElement('a')
+    a.href = pdf.blobUrl
+    a.download = pdf.fileName
+    a.click()
+
+    URL.revokeObjectURL(pdf.blobUrl)
+
+
+  })
+
+
 </script>
 
 <template>
@@ -66,6 +92,10 @@ const resetForm = () => {
               </v-card-actions>
           </v-card>
       </v-form>
+<!--      <div>-->
+<!--        <button @click="downloadPdf()">파일다룬로드 test</button>-->
+<!--      </div>-->
+
     </VContainer>
 </template>
 

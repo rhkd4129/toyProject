@@ -12,6 +12,10 @@ public class PdfResponseDTO {
     private Resource resource;
     private String encodedFilename;
 
+    public PdfResponseDTO(String fileName) {
+        this.fileName = fileName;
+    }
+
     public PdfResponseDTO(String fileName, String filePath, Resource resource, String encodedFilename) {
         this.fileName = fileName;
         this.filePath = filePath;

@@ -21,7 +21,7 @@ public class SseEmitterService {
     }
 
     //SSE Emitter를 생성하는 메소드
-    public SseEmitter createEmitter(String id) {
+    private SseEmitter createEmitter(String id) {
         SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
         //생성된 SSE Emitter를 저장소에 저장
         emitterRepository.save(id, emitter);
@@ -41,7 +41,7 @@ public class SseEmitterService {
         if (emitter != null) {
             try {
                 // 데이터를 클라이언트에게 실어보낸다.
-                emitter.send(SseEmitter.event().id(String.valueOf(taskId)).name("pdf완료").data("다운로드경로"));
+                emitter.send(SseEmitter.event().id(String.valueOf(taskId)).name("pdf완료").data(taskId));
             } catch (IOException exception) {
                 // 데이터 전송 중 오류가 발생하면 Emitter를 삭제하고 에러를 완료 상태로 처리
                 emitterRepository.deleteById(taskId);
@@ -49,13 +49,18 @@ public class SseEmitterService {
             }
         }
     }
-//    public SseEmitter subscribePdf(String taskId, final HttpServletResponse response){
-//        SseEmitter emitter = createEmitter(taskId);
-//        response.setContentType("text/event-stream");
-//        response.setCharacterEncoding("UTF-8");
-//        sendEvent(taskId);
-//        return emitter;
-
+    public SseEmitter subscribePdf(String taskId) {
+        SseEmitter emitter = createEmitter(taskId);
+        try {
+            // 503 방지 + 연결 확인용 dummy
+            emitter.send(SseEmitter.event()
+                    .name("connect")
+                    .data("connected"));
+        } catch (IOException e) {
+            emitter.completeWithError(e);
+        }
+        return emitter;
+    }
 //    // 503 Service Unavailable 방지용 dummy event 전송
 //    sendEventToClient(sseEmitter, emitterId, "EventStream Created. [email = " + email + " ]");
 

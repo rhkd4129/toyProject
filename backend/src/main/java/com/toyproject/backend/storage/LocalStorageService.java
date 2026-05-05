@@ -1,12 +1,19 @@
 package com.toyproject.backend.storage;
 import com.toyproject.backend.domain.pdf.dto.PdfRedisRequest;
+import com.toyproject.backend.domain.pdf.dto.PdfResponseDTO;
 import com.toyproject.backend.utils.FileUploadResult;
 import com.toyproject.backend.utils.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 
@@ -22,16 +29,22 @@ public class LocalStorageService implements StorageService{
     public PdfRedisRequest uploadFile(String taskId, MultipartFile file) throws IOException {
         String originalFilename = file.getOriginalFilename(); // "abc.pdf"
         String fileName= FileUtils.buildFileName(taskId,originalFilename);
-        FileUtils.uploadFile(fileName, file.getBytes(), uploadPathPattern);
         String filePath = Paths.get(uploadPathPattern, fileName).toString();
+
+        FileUtils.uploadFile(fileName, file.getBytes(), uploadPathPattern);
         return new PdfRedisRequest(taskId, filePath,originalFilename);
     }
 
     @Override
-    public void downloadFile(String downloadPath){
-        return;
-//        Path path = Paths.get(downloadPath);
-//        Resource resource= UrlResource(path.toUri());
+    public PdfResponseDTO downloadFile(String taskId) throws MalformedURLException {
+        String fileName = taskId+".pdf";
+        String encodedFilename = null;
+        Resource resource = null;
+        String filePath = Paths.get(uploadPathPattern, fileName).toString();
+        Path path = Paths.get(filePath);
+        resource= new UrlResource(path.toUri());
+        encodedFilename = URLEncoder.encode(fileName, StandardCharsets.UTF_8);
+        return PdfResponseDTO.of(fileName,filePath,resource,encodedFilename);
 
     }
 

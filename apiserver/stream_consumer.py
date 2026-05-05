@@ -3,6 +3,7 @@ import redis.asyncio as redis
 from services.Processer import Processer
 from services.XLSXProcessor import XLSXProcessor
 import easyocr
+import time
 '''
 Redis는 기본적으로 데이터를 bytes로 반환해요
 이걸 True로 하면 자동으로 String으로 변환해줌
@@ -31,11 +32,18 @@ async def consume():
             # [ (stream_name, [ (message_id, {field: value, ...}), ... ]) ]
             # 예: [(b'pdf:events', [('1234-0', {'url': 'https://...', 'key': 'abc'})])]
         print("메시지 도착")
+        time.sleep(10)  # 5초 대기
         stream_name, messages = results[0]
         for msg_id, fields in messages:
             #loop = asyncio.get_event_loop()
             # await loop.run_in_executor(None, process_message, fields)
-            await process_message(fields)
+            taskId  = fields["taskId"].strip('"')
+            print(taskId)
+            
+            #await process_message(fields)
+            
+            await r.xadd("pdf:results", {"taskId": taskId  })
+            print("메세지전송")
             last_id = msg_id  # 다음엔 이 이후부터 읽기
 
 
@@ -45,7 +53,6 @@ async  def process_message(fields: dict):
     taskId = fields["taskId"].strip('"')
     filePath = fields["filePath"].strip('"')
     originalFileName = fields["originalFileName"].strip('"')
-
     try:
         with Processer(filePath, taskId, reader=READER) as processer:
             metadata_list = processer.parse()

@@ -5,7 +5,7 @@ import fitz
 import numpy as np
 # from paddleocr import PaddleOCR
 import os
-PDF_PATH = "z.pdf"
+PDF_PATH = "실험2.pdf"
 print("EasyOCR 초기화 중...")
 reader = easyocr.Reader(['ko', 'en'])
 

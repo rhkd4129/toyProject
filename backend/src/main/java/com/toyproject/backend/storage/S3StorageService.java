@@ -1,6 +1,8 @@
 package com.toyproject.backend.storage;
 
 import com.toyproject.backend.domain.pdf.dto.PdfRedisRequest;
+import com.toyproject.backend.domain.pdf.dto.PdfResponseDTO;
+import com.toyproject.backend.domain.pdf.service.PdfService;
 import com.toyproject.backend.utils.FileUploadResult;
 import com.toyproject.backend.utils.FileUtils;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ public class S3StorageService implements StorageService{
     private final S3Client s3Client;
 
     private final S3Presigner s3Presigner;
+    private final PdfService pdfService;
 
     @Value("${cloud.aws.s3.bucket}")
     private  String bucket;
@@ -55,8 +58,8 @@ public class S3StorageService implements StorageService{
     }
 
     @Override
-    public void downloadFile(String downloadPath) {
-        return;
+    public PdfResponseDTO downloadFile(String taskId) {
+        return new PdfResponseDTO(taskId);
     }
 
     private String generatePresignedUrl(String filePath) {
