@@ -65,27 +65,27 @@ class A():
                 cropped = img_array[:h // fraction, :, :]
 
         return self.reader.readtext(cropped)
-    def _debug_region(self, page_index: int, region: tuple[float, float, float, float]) -> None:
-        """
-        region 영역을 크롭해서 이미지 파일로 저장. 좌표 튜닝용.
-        """
-        import cv2
+    # def _debug_region(self, page_index: int, region: tuple[float, float, float, float]) -> None:
+    #     """
+    #     region 영역을 크롭해서 이미지 파일로 저장. 좌표 튜닝용.
+    #     """
+    #     import cv2
 
-        page = self.doc[page_index]
-        pix = page.get_pixmap(dpi=300)
-        img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
-            pix.height, pix.width, pix.n
-        )
+    #     page = self.doc[page_index]
+    #     pix = page.get_pixmap(dpi=300)
+    #     img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
+    #         pix.height, pix.width, pix.n
+    #     )
 
-        h, w = img_array.shape[:2]
-        top    = int(h * region[0])
-        bottom = int(h * region[1])
-        left   = int(w * region[2])
-        right  = int(w * region[3])
+    #     h, w = img_array.shape[:2]
+    #     top    = int(h * region[0])
+    #     bottom = int(h * region[1])
+    #     left   = int(w * region[2])
+    #     right  = int(w * region[3])
 
-        cropped = img_array[top:bottom, left:right, :]
-        cv2.imwrite("debug_region.png", cv2.cvtColor(cropped, cv2.COLOR_RGB2BGR))
-        print(f"저장완료 → debug_region.png ({top}:{bottom}, {left}:{right})")
+    #     cropped = img_array[top:bottom, left:right, :]
+    #     cv2.imwrite("debug_region.png", cv2.cvtColor(cropped, cv2.COLOR_RGB2BGR))
+    #     print(f"저장완료 → debug_region.png ({top}:{bottom}, {left}:{right})")
 
     def _ocr_page_region(self,page_index: int,region: tuple[float, float, float, float] ):
         """
@@ -107,6 +107,11 @@ class A():
         cropped = img_array[top:bottom, left:right, :]
         return self.reader.readtext(cropped)
         
+    def _extract_has_next_page(self, results: list) -> bool:
+        """OCR 결과에서 '다음장계속' 있으면 True 반환"""
+        full_text = "".join(text for (_, text, _) in results).replace(" ", "")
+        return "다음장계속" in full_text
+
     def parse(self) -> None:
         print(f"총 {self.total_pages}페이지 감지됨\n")
 
@@ -115,53 +120,71 @@ class A():
         for i in range(self.total_pages):
             print(f"{i + 1}페이지 하단 OCR 읽는 중...")
             results = self._ocr_page(i, fraction=8, section="bottom")
+
+            has_no_next = self._extract_no_next_page(results)    # 다음장없음
+            has_continue = self._extract_has_next_page(results)  # 다음장계속
+
+            if not has_no_next and not has_continue:
+                # 초본 아님 → 스킵, 혹시 쌓인 그룹도 초기화
+                print(f"  → {i + 1}페이지: 초본 아님, 스킵")
+                if current_pages:
+                    print(f"  → 불완전한 그룹 {len(current_pages)}페이지 버림")
+                    current_pages = []
+                continue
+
             current_pages.append(i)
 
-            if self._extract_no_next_page(results):
+            if has_continue:
+                print(f"  → 다음장계속 감지, 그룹 누적 중 ({len(current_pages)}페이지)")
+
+            if has_no_next:
                 print(f"  → 다음장없음 감지! {i + 1}페이지에서 그룹 완성 ({len(current_pages)}페이지)")
                 self.people.append((None, current_pages))
                 current_pages = []
 
-        # 다음장없음 없이 끝난 잔여 페이지 처리
+        # 잔여 페이지 처리
         if current_pages:
             print(f"  → 잔여 그룹 (다음장없음 미감지): {len(current_pages)}페이지")
-            self.people.append((None, None, current_pages, None))
+            self.people.append((None, current_pages))
 
-        print(f"\n총 {len(self.people)}개 문서 감지됨\n")
+        print(f"\n총 {len(self.people)}개 초본 감지됨\n")
 
     def save_pdfs(self) -> None:
-        """그룹별로 이름초본.pdf 형식으로 저장. 이름 추출 실패 시 미상초본, 동명이인 시 _2, _3 suffix 추가."""
         os.makedirs(self.output_dir, exist_ok=True)
         
-        # 동명이인 처리를 위한 이름별 등장 횟수 카운터
         name_counter = {}
 
         for idx, (name, pages) in enumerate(self.people, start=1):
-            # 그룹의 첫 번째 페이지에서 이름 추출
             first_page = pages[0]
             name = self._extract_name_from_region(first_page)
             
-            # 이름 추출 실패 시 '미상'으로 대체
             base_name = f"{name}초본" if name else "미상초본"
+            folder_name = name if name else "미상"  # 폴더명은 이름만
             print(f"  → 이름 추출: [{base_name}]")
 
-            # 동명이인 카운트 증가 (첫 등장이면 1, 두 번째면 2 ...)
             name_counter[base_name] = name_counter.get(base_name, 0) + 1
             count = name_counter[base_name]
             
-            # 첫 등장이면 그대로, 두 번째부터 _2, _3 suffix 추가
-            filename = base_name if count == 1 else f"{base_name}_{count}"
+            # 동명이인이면 폴더명과 파일명 둘 다 suffix 추가
+            if count > 1:
+                folder_name = f"{folder_name}_{count}"
+                filename = f"{base_name}_{count}"
+            else:
+                filename = base_name
 
-            # 그룹 내 페이지들을 하나의 PDF로 합치기
+            # 이름 폴더 생성
+            person_dir = os.path.join(self.output_dir, folder_name)
+            os.makedirs(person_dir, exist_ok=True)
+
             out_doc = fitz.open()
             for page_index in pages:
                 out_doc.insert_pdf(self.doc, from_page=page_index, to_page=page_index)
 
-            # 최종 파일 저장
-            out_path = os.path.join(self.output_dir, f"{filename}.pdf")
+            # 이름 폴더 안에 저장
+            out_path = os.path.join(person_dir, f"{filename}.pdf")
             out_doc.save(out_path)
             out_doc.close()
-            print(f"  → {filename}.pdf 저장 완료 ({len(pages)}페이지) → {out_path}")
+            print(f"  → {folder_name}/{filename}.pdf 저장 완료 ({len(pages)}페이지)")
 
         print(f"\n총 {len(self.people)}개 PDF 저장 완료 → {self.output_dir}")
 
@@ -203,7 +226,17 @@ class A():
         #      print(text)
          
 
+# ──────────────────────────────────────────
+
+if __name__ == "__main__":
+    try:
+        with A() as reader:
+            reader.run()
+    except Exception as e:
+        print(f"\n❌ 오류 발생: {e}")
+    finally:
+        input("\n종료하려면 Enter를 누르세요...")
 
 
-with A() as reader:
-    reader.run()
+
+ 
