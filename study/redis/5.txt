@@ -1,0 +1,40 @@
+1. Vue → POST /task/new
+         ← taskId 반환
+
+2. Vue → GET /subscribe/{taskId}        (SSE 연결)
+         ← "connected" 더미 이벤트 반환  (연결 확인용)
+         (연결 유지 중...)
+
+3. Vue → POST /upload/{taskId}          (실제 파일 전송)
+         Spring → /shared/uploads/ 저장
+                → Redis Stream(pdf:events) XADD {taskId, 파일경로}
+         ← 200 OK
+
+4. FastAPI → Redis Stream XREAD
+           → PDF 처리
+           → /shared/results/ 결과 저장
+           → Redis Stream(log:events) XADD {taskId, 결과경로}
+
+5. Spring StreamMessageListenerContainer
+           → log:events 감지
+           → emitters Map에서 taskId로 emitter 꺼냄
+           → emitter.send(결과경로)
+           → emitter.complete()
+
+6. Vue EventSource 'complete' 이벤트 수신
+   → 다운로드 버튼 활성화
+
+
+
+
+async function uploadFile(file) {
+  // 1. task_id 먼저 발급
+  const { data: { taskId } } = await axios.get('/task/new');
+
+  // 2. SSE 연결 먼저
+  const eventSource = new EventSource(`/sse/${taskId}`);
+  eventSource.addEventListener('complete', (e) => { ... });
+
+  // 3. 그다음 업로드
+  await axios.post('/upload', { file, taskId });
+}
