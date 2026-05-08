@@ -37,11 +37,14 @@ public class PdfService {
 
 
 
-    public PdfRedisRequest createPdf(MultipartFile file) {
+    public String createPdfTaskId(){
+        return  UUID.randomUUID().toString();
+    }
+
+    public PdfRedisRequest createPdf(MultipartFile file,String pdfTaskId) {
         try {
-            String taskId = UUID.randomUUID().toString();
             //TODO 리팩토링? storageService.uploadFile
-            PdfRedisRequest pdfRedisRequest = storageService.uploadFile(taskId, file);
+            PdfRedisRequest pdfRedisRequest = storageService.uploadFile(pdfTaskId, file);
             redisService.addStream(pdfRedisRequest);
             return pdfRedisRequest;
         } catch (IOException e) {

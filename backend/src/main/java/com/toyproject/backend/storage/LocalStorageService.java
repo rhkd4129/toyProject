@@ -3,6 +3,7 @@ import com.toyproject.backend.domain.pdf.dto.PdfRedisRequest;
 import com.toyproject.backend.domain.pdf.dto.PdfResponseDTO;
 import com.toyproject.backend.utils.FileUploadResult;
 import com.toyproject.backend.utils.FileUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
@@ -19,6 +20,7 @@ import java.nio.file.Paths;
 
 @Service
 @Profile("local")
+@Slf4j
 public class LocalStorageService implements StorageService{
 
     @Value("${spring.servlet.multipart.location}")
@@ -30,7 +32,7 @@ public class LocalStorageService implements StorageService{
         String originalFilename = file.getOriginalFilename(); // "abc.pdf"
         String fileName= FileUtils.buildFileName(taskId,originalFilename);
         String filePath = Paths.get(uploadPathPattern, fileName).toString();
-
+        log.info("파일업로드 => {}",filePath);
         FileUtils.uploadFile(fileName, file.getBytes(), uploadPathPattern);
         return new PdfRedisRequest(taskId, filePath,originalFilename);
     }

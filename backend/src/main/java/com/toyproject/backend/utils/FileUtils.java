@@ -28,6 +28,13 @@ public class FileUtils {
         FileCopyUtils.copy(fileData, target);
     }
 
+//    public static String buildFileName(String taskId, String originalFilename) {
+//        int dotIndex = originalFilename.lastIndexOf(".");
+//        String baseName = originalFilename.substring(0, dotIndex);  // "20260331133042"
+//        String ext = originalFilename.substring(dotIndex);           // ".pdf"
+//        return baseName + "_" + taskId + ext;  // "20260331133042_73809edf-....pdf"
+//    }
+//
     public static String buildFileName(String taskId, String originalFilename){
         String ext = originalFilename.substring(originalFilename.lastIndexOf(".")); // ".pdf"
         return  taskId + ext;

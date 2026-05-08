@@ -7,7 +7,8 @@ const valid = ref(false);
 const store = useStore()
 const router = useRouter();
 const formData = ref({pdfFile: null,});
-const taskId = computed(()=>store.state.pdfStore.pdfTaskId)
+
+const  pdfResultPath = computed(()=>store.state.pdfStore.pdfResultPath)
 
 const rules = reactive({
   pdfFile: [
@@ -16,10 +17,20 @@ const rules = reactive({
   ]
 });
 
+const onFileSelected = async (file)=>{
+  try{
+    if(!file) return;
+    await store.dispatch('pdfStore/getPdfTaskId')
+    await store.dispatch('pdfStore/connectEmitter')
+  }catch (e) {
+      console.log(err)
+  }
+
+}
+
 const submitForm = async ()=>{
   try{
     await store.dispatch("pdfStore/addPdf",formData.value)
-    await store.dispatch("pdfStore/connectEmitter");
     // router.push({ name: "posts" });
   }catch (error){
     console.log(error)
@@ -31,17 +42,17 @@ const resetForm = () => {
   valid.value = false;
 };
 
-const downloadPdf = async ()=>{
-  const taskId= "a"
-  const pdf = await store.dispatch("pdfStore/getPdf",taskId)
-  const a = document.createElement('a')
-  a.href = pdf.blobUrl
-  a.download = pdf.fileName
-  a.click()
-  URL.revokeObjectURL(pdf.blobUrl)
-// 메모리 해제 (중요!)
-}
-  watch(taskId, async(newVal, oldVal)  => {
+// const downloadPdf = async ()=>{
+//   const taskId= "a"
+//   const pdf = await store.dispatch("pdfStore/getPdf",taskId)
+//   const a = document.createElement('a')
+//   a.href = pdf.blobUrl
+//   a.download = pdf.fileName
+//   a.click()
+//   URL.revokeObjectURL(pdf.blobUrl)
+// // 메모리 해제 (중요!)
+// }
+  watch(pdfResultPath, async(newVal, oldVal)  => {
     console.log(newVal, oldVal)
     const pdf = await store.dispatch("pdfStore/getPdf",newVal)
     const a = document.createElement('a')
@@ -64,6 +75,7 @@ const downloadPdf = async ()=>{
               <v-card-title class="text-h5 mb-4"></v-card-title>
               <v-file-input
                   v-model="formData"
+                  @change="onFileSelected"
                   :rules="rules.pdfFile"
                   label="PDF 업로드"
                   accept="application/pdf"

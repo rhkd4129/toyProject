@@ -14,24 +14,6 @@ export const apiFileClient  = axios.create({
     },
     withCredentials:true
 });
-export function conEmitter(pdfTaskId) {
-    const url = `${import.meta.env.VITE_API_BASE_URL}/pdf/subscribe/${pdfTaskId}`;
-    const eventSource = new EventSource(url);
-
-    // eventSource.onmessage = (event) => {
-    //     console.log('받은 데이터:', event.data);
-    //
-    //     // 여기서 상태 업데이트 등 처리
-    // };
-    //
-    // eventSource.onerror = (error) => {
-    //     console.error('SSE 에러:', error);
-    //     eventSource.close();
-    // };
-
-    // 필요할 때 연결 종료할 수 있도록 반환
-    return eventSource;
-}
 
 export async function createPost(newPost){
     try{
@@ -72,6 +54,17 @@ export async function updatePost(id, updatedPost){
     }
 }
 
+export async function createPdfTaskId(){
+    try{
+        const response = await apiClient.get("/pdf/create/id")
+        return response.data
+    }catch (error){
+        console.error('Error fetching posts:', error);
+        throw error;
+    }
+}
+
+
 export async function createPdf(formData){
     try{
         const response  = await apiFileClient.post('/pdf/create',formData)
@@ -94,13 +87,7 @@ export async function downloadPdf(taskId){
     }
 }
 
-// export async function conEmitter(pdfTaskId){
-//     try{
-//         const response  = await apiFileClient.get('/pdf/subscribe/{pdfTaskId}')
-//         return response.data
-//     }catch(error){
-//         console.error('Error createPdf:', error);
-//         throw error;
-//     }
-// }
-//
+export function conEmitter(pdfTaskId) {
+    return new EventSource(`${import.meta.env.VITE_API_BASE_URL}/pdf/subscribe/${pdfTaskId}`);
+}
+

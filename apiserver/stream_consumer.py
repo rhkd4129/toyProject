@@ -42,7 +42,7 @@ async def consume():
             
             #await process_message(fields)
             
-            await r.xadd("pdf:results", {"taskId": taskId  })
+            await r.xadd("pdf:results", {"taskId": taskId ,"hi":"hi" })
             print("메세지전송")
             last_id = msg_id  # 다음엔 이 이후부터 읽기
 

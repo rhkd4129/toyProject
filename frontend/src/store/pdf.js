@@ -1,4 +1,5 @@
-import {conEmitter, createPdf, downloadPdf} from "@api";
+import {conEmitter, createPdf, createPdfTaskId, downloadPdf} from "@api";
+import {standardEasing} from "vuetify/lib/util/index.d.ts";
 
 
 const pdfStore={
@@ -6,7 +7,8 @@ const pdfStore={
 
     state:()=>({
         pdf:null,
-        pdfTaskId :null
+        pdfTaskId :null,
+        pdfResultPath: null,  // 추가
     }),
     getters:{
         pdf(state){return state.pdf},
@@ -14,8 +16,11 @@ const pdfStore={
     },
     mutations:{
         setPdf(state,value){state.pdf = value},
-        setTaskId(state,value){state.pdfTaskId  = value}
+        setPdfTaskId(state,value){state.pdfTaskId  = value},
+        setResultPath(state, path) {   state.pdfResultPath = path;}
+
     },
+
     actions:{
 
         async getPdf({state,dispatch},value){
@@ -31,43 +36,41 @@ const pdfStore={
                 fileName: fileName
             }
             return pdf;
+
+        },
+
+        async getPdfTaskId({commit}){
+            const result = await createPdfTaskId();
+
+            // result.data.pdfTaskId
+            commit("setPdfTaskId", result.data)
         },
 
         async addPdf({state,commit},value) {
             const formData = new FormData();
             formData.append("newPdf", value); // JSON.stringify 제
+            formData.append("pdfTaskId",state.pdfTaskId)
             const result = await createPdf(formData)
-            commit("setTaskId", result.data.taskId)
+            console.log(result)
         },
-        async connectEmitter({state,commit}){
+        async connectEmitter({ state, commit }) {
+            const es = conEmitter(state.pdfTaskId);
 
-            const es =  conEmitter(state.pdfTaskId);
             es.addEventListener("connect", (event) => {
                 console.log("연결확인:", event.data);
-
-
             });
 
             es.addEventListener("pdf완료", (event) => {
                 console.log("완료:", event.data);
-                // console.log(e.lastEventId)  // "123"  ← id
-                commit("setTaskId",event.data)
+                commit("setResultPath", event.data);  // 결과경로 저장
+                es.close();                            // 연결 끊기
             });
 
             es.onerror = (error) => {
                 console.error("SSE 에러:", error);
                 es.close();
             };
-            // es.onmessage = (event) => {
-            //     console.log('받은 데이터:', event.data);
-            //     const data = JSON.parse(event.data);
-            //     // commit("setPdfStatus", data);
-            //
-            //     if (data.status === "DONE") {
-            //         es.close();
-            //     }
-            // };
-        }
+        },
 
             // {
             //     "message": null,

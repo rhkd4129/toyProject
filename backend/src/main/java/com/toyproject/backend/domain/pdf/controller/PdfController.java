@@ -34,11 +34,22 @@ public class PdfController {
     //    @RequestPart
 //    파일 + JSON 데이터를 같이 받을 때
 //    각 파트마다 Content-Type이 다를 수 있어서 이걸 구분해서 처리해줌
+    @GetMapping("/create/id")
+    public ResponseEntity<?> createPdfTaskId(){
+        log.info(" ============= createPdfTaskId 진입 ================");
+        Result result   = new Result();
+        String pdfTaskId = pdfService.createPdfTaskId();
+        result.setData(pdfTaskId);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+
     @PostMapping("/create")
-    public ResponseEntity<?> createPdf(@RequestParam("newPdf") MultipartFile newPdf) {
+    public ResponseEntity<?> createPdf(@RequestPart("newPdf") MultipartFile newPdf ,
+                                       @RequestPart("pdfTaskId") String pdfTaskId) {
         log.info(" ============= createPdf 진입 ================");
         Result result = new Result();
-        PdfRedisRequest pdfRedisRequest = pdfService.createPdf(newPdf);
+        PdfRedisRequest pdfRedisRequest = pdfService.createPdf(newPdf,pdfTaskId);
         result.setData(pdfRedisRequest);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
@@ -66,3 +77,14 @@ public class PdfController {
 
 
 }
+//1. Vue → POST /task/new
+//        ← taskId 반환
+//
+//2. Vue → GET /subscribe/{taskId}        (SSE 연결)
+//        ← "connected" 더미 이벤트 반환  (연결 확인용)
+//         (연결 유지 중...)
+//
+//        3. Vue → POST /upload/{taskId}          (실제 파일 전송)
+//Spring → /shared/uploads/ 저장
+//                → Redis Stream(pdf:events) XADD {taskId, 파일경로}
+//         ← 200 OK
