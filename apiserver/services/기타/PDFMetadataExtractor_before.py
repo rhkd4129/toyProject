@@ -5,7 +5,7 @@ import os
 import re
 import json
 import sys
-from apiserver.services.utils.BaseProcessor import BaseProcessor
+from apiserver.services.workProcess.BaseProcessor import BaseProcessor
 """
     채무자별 메타데이터(이름, 사건번호, 페이지 수, 시작 페이지)만 추출해 metadata.json으로 저장하는 클래스.
     PDF 분리는 수행하지 않는다.

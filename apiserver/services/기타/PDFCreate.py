@@ -1,6 +1,6 @@
 import fitz  # pymupdf
 import os
-from apiserver.services.utils.BaseProcessor import BaseProcessor
+from apiserver.services.workProcess.BaseProcessor import BaseProcessor
 
 
 class PDFCreate(BaseProcessor):

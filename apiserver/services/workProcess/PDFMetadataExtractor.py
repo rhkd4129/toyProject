@@ -1,13 +1,59 @@
 import fitz
 import easyocr
 import numpy as np
-import os
 from datetime import datetime
 import re
 import json
-from apiserver.services.utils import BaseProcessor
-import sys
+import os, sys
+from datetime import datetime
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import pandas as pd
+import json
+import os
+class LogWrite:
+    def __init__(self, filename):
+        self.file = open(filename, "w", encoding="utf-8")
+        self.stdout = sys.stdout
 
+    def write(self, data):
+        self.stdout.write(data)   # 콘솔에도 출력
+        self.file.write(data)     # 파일에도 저장
+
+    def flush(self):
+        self.stdout.flush()
+        self.file.flush()
+
+    def close(self):
+        self.file.close()
+class BaseProcessor:
+    """공통 기능을 모아두는 부모 클래스"""
+
+    @staticmethod
+    def load_json(path: str) -> dict | list:
+        print(path)
+        """JSON 파일 로드 (에러 처리 포함)"""
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except FileNotFoundError:
+            print(f" 파일을 찾을 수 없습니다: {path}")
+            sys.exit(1)
+        except json.JSONDecodeError:
+            print(f" JSON 파싱 실패: {path}")
+            sys.exit(1)
+
+    @staticmethod
+    def save_json(path: str, data: dict | list) -> None:
+        """JSON 파일 저장"""
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        print(f"저장 완료 → {path}")
+
+    def run(self):
+        raise NotImplementedError("run()을 구현해야 합니다.")
 """
     채무자별 메타데이터(이름, 사건번호, 페이지 수, 시작 페이지)만 추출해 metadata.json으로 저장하는 클래스.
     PDF 분리는 수행하지 않는다.
@@ -242,3 +288,368 @@ class PDFMetadataExtractor(BaseProcessor):
 
 # with PDFMetadataExtractor("parameter.json") as reader:
 #     reader.run()
+
+# @staticmethod란?
+# @staticmethod는 클래스/인스턴스와 무관하게 동작하는 순수 함수입니다.
+# 그래서 self를 파라미터로 받지 않고, 당연히 self.뭔가에도 접근할 수 없습니다.
+# _load_metadata는 self.sheets, self.metadata를 수정해야 하는 함수이므로, @staticmethod가 아닌 일반 메서드로 선언해야 합니다.
+class XLSXReader(BaseProcessor):
+    
+    division_name = "채무자"
+    division_number ="사건번호"
+
+    def __init__(self,xlsx_file_name:str,metadata_file_name:str):
+        self.xlsx_file_name = xlsx_file_name
+        self.metadata_file_name = metadata_file_name
+
+        self.metadata = self.load_json(metadata_file_name)
+        self.sheets = self._load_xlsx(xlsx_file_name)      
+
+        self.year = xlsx_file_name[0:4]
+
+
+        
+        # 드모르간 법칙으로 이해하면 쉽습니다:
+        # ```
+        # "A도 있고 B도 있어야 한다"
+        # = "A가 없거나 B가 없으면 skip"
+        # = not in A or not in B
+    def _search_in_sheets(self, target_name: str, target_number: str, item: dict) -> bool:
+        found = False
+        for sheet_name, df in self.sheets.items():
+            if self.division_number not in df.columns or self.division_name not in df.columns:
+                continue
+    
+            matched = df[
+                (df[self.division_number] == str(target_number)) &
+                # (df[self.division_name] == str(target_name))
+                 (df[self.division_name].str.contains(str(target_name), na=False))
+            ]
+                
+            for idx in matched.index:
+                found = True
+                # matched.loc[idx].to_dict : 매칭된 행(row) 하나를 Series로 가져오고 dict으로변환
+                # if pd.notna(v)값이 NaN인 항목 제거
+                #
+                row_dict = {k: v for k, v in matched.loc[idx].to_dict().items() if pd.notna(v)}
+                if '채권번호' in row_dict:
+                    row_dict['채권번호'] = row_dict['채권번호'].replace("-", "")
+                if "강북" in sheet_name:
+                    sheet_name = "강북"
+                row_dict["sheet"] = sheet_name
+
+                item["info"] = row_dict
+        return found
+
+
+    def find_number(self):
+        for item in self.metadata:
+            target_name = item.get('name')
+            target_number = item.get('case_number')
+            if target_name is None or target_number is None:
+                print(f" 필수 속성 누락 - item: {item}")
+                continue
+
+            found = self._search_in_sheets(target_name, target_number, item)  # ← 현재 연도
+            if(found):
+                print(f"{target_name} 찾음")
+            if not found:
+                print("시트에서 데이터를 못찾았습니다.!!!!")
+                if str(target_number[0:4]) != str(self.year):
+                    print(f"{self.target_name}은{self.year}년 사건이 아닙니다 pass")
+                else:
+                    print(f" 매치 없음 - 이름: {target_name} | 사건번호: {target_number}")
+                    
+                #     before_year = int(self.year) -1
+                #     filename = os.path.basename(new_xlsx_file)
+                #     new_filename = filename.replace(str(self.year), str(before_year))
+                #     new_xlsx_file = os.path.join(os.path.dirname(new_xlsx_file), new_filename)
+                #     # new_xlsx_file = self.xlsx_file_name.replace(self.year, target_number[0:4])
+
+                #     print(f"{target_name}은 {target_number[0:4]} 이므로 해당년도 파일 탐색 : {new_xlsx_file}")
+                #     try:
+                #         self.sheets = self._load_xlsx(new_xlsx_file)
+                #         found = self._search_in_sheets(target_name, target_number, item)  # ← 다른 연도
+                #         if(found):
+                #             print(f"{target_name} 찾음")
+                #     except FileNotFoundError:
+                #         print(f"{new_xlsx_file} 파일을 찾을 수 없습니다.")
+                #     finally:
+                #         self.sheets =  self._load_xlsx(self.xlsx_file_name)  # 원본 복원
+
+            # if not found:
+            #     print(f" 매치 없음 - 이름: {target_name} | 사건번호: {target_number}")
+
+    def _load_xlsx(self, xlsx_file_name: str):
+         return pd.read_excel(xlsx_file_name,sheet_name=None,dtype=str)
+
+
+
+    def run(self):
+        # self._load_metadata(self.xlsx_file,self.metadata_file)
+        self.find_number()
+        with open(self.metadata_file_name, "w", encoding="utf-8") as f:
+                json.dump(self.metadata, f, ensure_ascii=False, indent=2)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+        #self.close()
+
+
+
+# with XLSXReader("2026사건부.xlsx","output/metadata.json") as reader:
+#     reader.run()
+
+class XLSXCreate(BaseProcessor):
+    font_path = "NANUMGOTHIC.TTF"
+    HEADER    = ["담당자", "채권번호", "채무자", "사건명", "사건번호", "법원", "결정일", "결정금액"]
+
+    def __init__(self, metadata_file_name):
+        pdfmetrics.registerFont(TTFont("NanumGothic", self.font_path))
+        self.metadata = self.load_json(metadata_file_name)
+
+        if getattr(sys, 'frozen', False):
+            base_dir = os.path.dirname(sys.executable)
+        else:
+            base_dir = os.getcwd()
+
+        now              = datetime.now()
+        today            = now.strftime('%Y%m%d')
+        self.today_str   = now.strftime("%Y-%m-%d")
+        self.OUTPUT_PATH = os.path.join(base_dir, today, "result.xlsx")
+        os.makedirs(os.path.dirname(self.OUTPUT_PATH), exist_ok=True)
+
+    def create_xlsx(self):
+        # ── 워크북 준비 ──
+        if os.path.exists(self.OUTPUT_PATH):
+            wb = load_workbook(self.OUTPUT_PATH)
+        else:
+            wb = Workbook()
+            if "Sheet" in wb.sheetnames:
+                del wb["Sheet"]
+
+        # ── 공통 스타일 ──
+        thin        = Side(style="thin", color="000000")
+        border      = Border(left=thin, right=thin, top=thin, bottom=thin)
+        center      = Alignment(horizontal="center", vertical="center")
+        header_font = Font(name="맑은 고딕", bold=True, size=10)
+        data_font   = Font(name="맑은 고딕", size=10)
+        col_widths  = [8, 14, 8, 12, 16, 12, 11, 12]
+        yellow_fill = PatternFill(fill_type="solid", fgColor="FFFF00")
+        gray_fill   = PatternFill(fill_type="solid", fgColor="D9D9D9")
+
+        # ──────────────────────────────────────────
+        # 1. 일반 시트들 (강북, 기타 등) → 새 양식
+        # ──────────────────────────────────────────
+        sheets: dict = {}
+        for item in self.metadata:
+            if not isinstance(item, dict):
+                continue
+            info       = item.get("info", {})
+            sheet_name = info.get("sheet", "기타")
+            sheets.setdefault(sheet_name, []).append(item)
+
+        for sheet_name, rows in sheets.items():
+            if sheet_name in wb.sheetnames:
+                ws = wb[sheet_name]
+            else:
+                ws = wb.create_sheet(title=sheet_name)
+
+                # 1행: 타이틀
+                ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(self.HEADER))
+                title_cell           = ws.cell(row=1, column=1, value="법원문서 전달")
+                title_cell.font      = Font(name="맑은 고딕", bold=True, size=14)
+                title_cell.alignment = center
+                title_cell.border    = border
+                ws.row_dimensions[1].height = 24
+
+                # 2행: 헤더 (회색)
+                ws.row_dimensions[2].height = 18
+                for col_idx, h in enumerate(self.HEADER, start=1):
+                    cell           = ws.cell(row=2, column=col_idx, value=h)
+                    cell.font      = header_font
+                    cell.alignment = center
+                    cell.border    = border
+                    cell.fill      = gray_fill
+
+                # 열 너비
+                for col_idx, width in enumerate(col_widths, start=1):
+                    ws.column_dimensions[ws.cell(row=2, column=col_idx).column_letter].width = width
+
+            # 3행~: 데이터
+            next_row = ws.max_row + 1 if ws.max_row > 2 else 3
+            for i, item in enumerate(rows):
+                info     = item.get("info", {})
+                row_data = [
+                    info.get("담당자"),
+                    self.format_bond_number(info.get("채권번호")),
+                    info.get("채무자"),
+                    info.get("사건"),
+                    info.get("사건번호"),
+                    info.get("관할법원"),
+                    "",
+                    item.get("amount", "")
+                ]
+                ws.row_dimensions[next_row + i].height = 16
+                for col_idx, value in enumerate(row_data, start=1):
+                    cell           = ws.cell(row=next_row + i, column=col_idx, value=value)
+                    cell.font      = data_font
+                    cell.alignment = center
+                    cell.border    = border
+
+            # 날짜: 데이터 끝 아래 E열
+            date_row            = next_row + len(rows)
+            date_cell           = ws.cell(row=date_row, column=5, value=self.today_str)
+            date_cell.font      = Font(name="맑은 고딕", size=10)
+            date_cell.alignment = Alignment(horizontal="center", vertical="center")
+            ws.row_dimensions[date_row].height = 16
+
+        # ──────────────────────────────────────────
+        # 2. 사건데이터 시트
+        # ──────────────────────────────────────────
+        if "사건데이터" in wb.sheetnames:
+            del wb["사건데이터"]
+        ws = wb.create_sheet(title="사건데이터")
+
+        for i, value in enumerate(self.metadata):
+            row = value.get("info")
+            pay = value.get("amount", "")
+
+            if row is None:
+                ws.row_dimensions[i + 1].height = 16
+                continue
+
+            sheet_name       = (row.get("sheet") or "").strip()
+            should_highlight = (not pay) or (sheet_name == "개인금융")
+
+            row_data = [
+                row.get("sheet"),
+                row.get("담당자"),
+                self.format_bond_number(row.get("채권번호")),
+                row.get("채무자"),
+                row.get("사건"),
+                row.get("사건번호"),
+                row.get("관할법원"),
+                row.get("집행권원법원"),
+                row.get("집행권원사건명"),
+                row.get("집행권원사건번호"),
+            ]
+            ws.row_dimensions[i + 1].height = 16
+            for col_idx, val in enumerate(row_data, start=1):
+                cell      = ws.cell(row=i + 1, column=col_idx, value=val)
+                cell.font = data_font
+                if should_highlight:
+                    cell.fill = yellow_fill
+
+        # ── 저장 ──
+        wb.save(self.OUTPUT_PATH)
+        print(f"저장 완료: {self.OUTPUT_PATH}")
+
+    def run(self):
+        self.create_xlsx()
+
+    def format_bond_number(self, value):
+        """채권번호 포맷: 212056480 → 212-056480"""
+        if value is None:
+            return ""
+        s = str(value).strip()
+        if len(s) > 3:
+            return f"{s[:3]}-{s[3:]}"
+        return s
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
+
+import traceback
+
+
+class Executor:
+
+      def __init__(self,xlslFile,metadataFile):
+          self.xlsxFile = xlslFile
+          self.metadataFile = metadataFile
+          os.makedirs(os.path.dirname(metadataFile), exist_ok=True)
+        #   self.outputFile = outputFile
+
+      def _step1(self):
+            with PDFMetadataExtractor() as pdfmetadataExtractor:
+                  pdfmetadataExtractor.run()
+      def _step2(self):
+           with XLSXReader(self.xlsxFile,self.metadataFile) as xlsxreader:
+                  xlsxreader.run()
+      def _step3(self):
+           with XLSXCreate(self.metadataFile) as xlsxCreater:
+                  xlsxCreater.run()
+
+    #   def _step3(self):
+    #        with PDFCreate(self.config,self.metadataFile,self.outputFile) as pdfcreate:
+    #               pdfcreate.run()
+    #   def _step4(self):
+    #        with PDFSplitter(self.metadataFile,self.outputFile) as pdfsplitter:  
+    #               pdfsplitter.run()
+
+      def run(self):
+        filename = datetime.now().strftime("log_%Y%m%d_%H%M%S.txt")
+        log = LogWrite(filename)
+        sys.stdout = log  # 이 줄부터 모든 print가 파일에도 저장됨
+        start_time = datetime.now()
+        print(f"▶ 실행 시작: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        print("=" * 30)
+
+
+        try:
+            print("-------------------------- 시작 -------------------------- ")
+            print(" --------------------------  1. metadata.json작성 -------------------------- ")
+            self._step1()
+            print("2. -------------------------- 사건부 조회후 매칭 --------------------------")
+            self._step2()
+            print("3. --------------------------  시트 생성  -------------------------- ")
+            self._step3()
+            # print("4. --------------------------  pdf  분리   -------------------------- ")
+            # self._step4()
+
+        except Exception as e:
+           
+            traceback.print_exc()  # 에러 내용 콘솔에 출력
+        finally:
+            end_time = datetime.now()
+            elapsed = end_time - start_time
+            print("=" * 30)
+            print(f"실행 종료: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"총 소요시간: {elapsed.seconds}초 ({elapsed})")
+            sys.stdout = log.stdout  # 원래 stdout 복구
+            log.close()
+            input("\n종료하려면 Enter를 누르세요...")  # 에러 나도 항상 실행
+
+#  pyinstaller --onefile Executor.pySs
+if __name__ == "__main__":
+
+    print("▶ 스크립트 진입 성공")  # 여기서 출력되면 import는 OK
+
+    try:
+        base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.getcwd()
+        today = datetime.now().strftime("%Y%m%d")
+        print("▶ Executor 생성 시도")
+        executor = Executor(
+            os.path.join(base_dir, "2026사건부.xlsx"),
+            os.path.join(base_dir, today, "metadata.json")
+        )       
+        print("▶ Executor 생성 성공, run() 호출")
+        executor.run()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()  # 에러를 터미널에 직접 출력
+        input("\n에러 확인 후 Enter...")
+
+
+
+
+# pyinstaller --onefile --add-data "NANUMGOTHIC.TTF;." --paths "../../../" Executor.py
