@@ -14,22 +14,25 @@ class XLSXProcessor:
     HEADER    = ["담당자", "채권번호", "채무자", "사건명", "사건번호", "법원", "결정일", "결정금액"]
 
 
-    XLSX_FILE_NAME = r"C:\Server\PDF\{year}사건부.xlsx"
-    OUTPUT_PATH = r"C:\Server\PDF\{today}.xlsx"
-    FONT_PATH = r"C:\Server\PDF\NANUMGOTHIC.TTF"
+    XLSX_FILE_NAME = r"C:\Server\PDF\CONFIG\{year}사건부.xlsx"
+    FONT_PATH = r"C:\Server\PDF\CONFIG\NANUMGOTHIC.TTF"
+    OUTPUT_PATH = r"C:\Server\PDF\{task_id}.xlsx"
+
     
     
 
-    def __init__(self, metadata_list):
+    def __init__(self, metadata_list,task_id):
             now = datetime.now()
             self.current_year = now.year
             self.metadata = metadata_list
+            self.task_id = task_id
             self.today_str = now.strftime("%Y-%m-%d")
             pdfmetrics.registerFont(TTFont("NanumGothic", self.FONT_PATH))
 
             # 클래스 변수 참조 후 인스턴스 변수로 별도 저장
             self.xlsx_file_name = self.XLSX_FILE_NAME.format(year=self.current_year)
-            self.output_path = self.OUTPUT_PATH.format(today=now.strftime("%Y%m%d_%H"))
+            # self.output_path = self.OUTPUT_PATH.format(today=now.strftime("%Y%m%d_%H"))
+            self.output_path = self.OUTPUT_PATH.format(task_id =self.task_id)
             self.sheets = self._load_xlsx(self.xlsx_file_name)
         
 

@@ -20,13 +20,13 @@ import {useStore} from "vuex";
 
 <template>
   <PdfForm/>
-  <p>XLSX 생성하기 </p>
-  <PdfUploadForm
-      :rules = "myRules"
-       @file-selected="handleFileSelected"
-      @submit="handleSubmit"
-      submit-label="XLSX 생성하기">
-  </PdfUploadForm>
+<!--  <p>XLSX 생성하기 </p>-->
+<!--  <PdfUploadForm-->
+<!--      :rules = "myRules"-->
+<!--       @file-selected="handleFileSelected"-->
+<!--      @submit="handleSubmit"-->
+<!--      submit-label="XLSX 생성하기">-->
+<!--  </PdfUploadForm>-->
 </template>
 
 <style scoped>

@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi import FastAPI
 import uvicorn
 from router.pdfRouter import pdf_router
-from init import lifespan 
+from core.lifespan import lifespan 
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(pdf_router)

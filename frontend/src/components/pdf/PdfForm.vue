@@ -23,7 +23,7 @@ const onFileSelected = async (file)=>{
     await store.dispatch('pdfStore/getPdfTaskId')
     await store.dispatch('pdfStore/connectEmitter')
   }catch (e) {
-      console.log(err)
+      console.log(e)
   }
 
 }
@@ -31,6 +31,7 @@ const onFileSelected = async (file)=>{
 const submitForm = async ()=>{
   try{
     await store.dispatch("pdfStore/addPdf",formData.value)
+    formData.value.pdfFile = null;
     // router.push({ name: "posts" });
   }catch (error){
     console.log(error)
@@ -74,7 +75,7 @@ const resetForm = () => {
             <v-card class="pa-4">
               <v-card-title class="text-h5 mb-4"></v-card-title>
               <v-file-input
-                  v-model="formData"
+                  v-model="formData.pdfFile"
                   @change="onFileSelected"
                   :rules="rules.pdfFile"
                   label="PDF 업로드"

@@ -19,15 +19,17 @@ public class PdfResultConsumer implements StreamListener<String, MapRecord<Strin
 
         @Override
         public void onMessage(MapRecord<String, String, String> message) {
+            log.info("--------- onMessage  ------");
+            log.info("redis results 스트림 도착 ");
             String taskId = message.getValue().get("taskId");
-            String hi =  message.getValue().get("hi");
-            log.info("---------------");
-            log.info("{}",taskId);
-            log.info("{}",hi);
-//            String resultPath    = message.getValue().get("filePath");
+            String resultPath    = message.getValue().get("filePath");
 
-//            log.info("📩 LOG 수신 - taskId: {} | resultPath: {}", taskId, resultPath);
-            sseEmitterService.sendEvent(taskId);
+
+            log.info("{}",taskId);
+            log.info("{}",resultPath);
+//            sseEmitterService.sendEvent(taskId);
+            sseEmitterService.sendEvent(taskId,resultPath);
+
             
 //            storageService.downloadFile();
 

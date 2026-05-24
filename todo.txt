@@ -1,15 +1,77 @@
 vue에서 pdfForm에서 v-model 부분 
 메시지 큐에 저정할 값 filepath와 name?
 
-
-초본분리기
-
-초본
+5.24
 
 
+현재는 pdf에서 xlsx로 변환하는게 하드코딩되어잇음 ,
 
-파일이름이         채무자이름||지급명령
-                  채무자이름||판결  ,집행문, 송달
-                  채무자이름||이행권고결정
-                  채무자이름||xxxx
 
+ 로컬 세팅 방법
+
+  Spring → application-local.yml (이미 있음)
+
+  # application-local.yml
+  redis:
+    stream:
+      pdf-events: ${REDIS_STREAM_PDF_EVENTS:pdf:events}
+      #                                    ↑ 환경변수 없으면 이 기본값 사용
+  sse:
+    event:
+      pdf-complete: ${SSE_EVENT_PDF_COMPLETE:pdf완료}
+
+  ▎ 로컬에선 환경변수 없어도 : 뒤 기본값으로 동작하니까 .env 없어도 됨
+
+  ---
+  FastAPI → .env + python-dotenv
+
+  # apiserver/.env
+  REDIS_STREAM_PDF_EVENTS=pdf:events
+  REDIS_STREAM_PDF_RESULTS=pdf:results
+  SSE_EVENT_PDF_COMPLETE=pdf완료
+
+  # apiserver/constants.py
+  from dotenv import load_dotenv
+  import os
+
+  load_dotenv()  # .env 읽기
+
+  class RedisStream:
+      PDF_EVENTS  = os.getenv("REDIS_STREAM_PDF_EVENTS", "pdf:events")
+      PDF_RESULTS = os.getenv("REDIS_STREAM_PDF_RESULTS", "pdf:results")
+
+  pip install python-dotenv
+
+  ---
+  Vue → .env.development (이미 있음)
+
+  # frontend/.env.development
+  VITE_API_BASE_URL=http://localhost:8085/api
+  VITE_SSE_EVENT_PDF_COMPLETE=pdf완료
+
+  // constants.js
+  export const SSE_EVENT = {
+    PDF_COMPLETE: import.meta.env.VITE_SSE_EVENT_PDF_COMPLETE
+  }
+
+  ---
+  나중에 Docker로 갈 때
+
+  # docker-compose.yml
+  services:
+    spring:
+      environment:
+        - REDIS_STREAM_PDF_EVENTS=pdf:events  # ← 변수명 동일
+    fastapi:
+      environment:
+        - REDIS_STREAM_PDF_EVENTS=pdf:events  # ← 변수명 동일
+
+  코드는 그대로고 값 주입 방법만 바뀌는 거라 수정 없음
+
+  ---
+  흐름 정리
+
+  로컬:   .env 파일 → 각 서비스가 직접 읽음
+  Docker: docker-compose.yml → 환경변수로 주입
+
+  코드 입장에서는 둘 다 "환경변수에서 읽는다" 로 동일

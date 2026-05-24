@@ -48,7 +48,7 @@ const pdfStore={
 
         async addPdf({state,commit},value) {
             const formData = new FormData();
-            formData.append("newPdf", value); // JSON.stringify 제
+            formData.append("newPdf", value.pdfFile); // JSON.stringify 제
             formData.append("pdfTaskId",state.pdfTaskId)
             const result = await createPdf(formData)
             console.log(result)
@@ -56,13 +56,14 @@ const pdfStore={
         async connectEmitter({ state, commit }) {
             const es = conEmitter(state.pdfTaskId);
 
-            es.addEventListener("connect", (event) => {
+            es.addEventListener(import.meta.env.VITE_SSE_EVENT_CONNECT, (event) => {
                 console.log("연결확인:", event.data);
             });
 
-            es.addEventListener("pdf완료", (event) => {
+            es.addEventListener(import.meta.env.VITE_SSE_EVENT_PDF_DONE, (event) => {
                 console.log("완료:", event.data);
-                commit("setResultPath", event.data);  // 결과경로 저장
+                const { taskId, filePath } = JSON.parse(event.data);
+                commit("setResultPath", taskId);  // 결과경로 저장
                 es.close();                            // 연결 끊기
             });
 

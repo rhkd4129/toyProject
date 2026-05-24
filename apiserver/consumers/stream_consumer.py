@@ -2,6 +2,7 @@ import asyncio
 import redis.asyncio as redis
 from services.Processer import Processer
 from services.XLSXProcessor import XLSXProcessor
+from core.config import redis_settings
 import easyocr
 import time
 '''
@@ -11,7 +12,15 @@ Redis는 기본적으로 데이터를 bytes로 반환해요
 '''
 
 READER = easyocr.Reader(['ko', 'en'])  # 서버 시작 시 1회만
-r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
+# 기존 코드 (하드코딩)
+# r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+r = redis.Redis(
+    host=redis_settings.host,
+    port=redis_settings.port,
+    decode_responses=True
+)
+
 async def consume():
     # Stream을 Pub/Sub처럼 쓰기
     last_id = "$"  # 지금 이후 새로 들어오는 것만
@@ -19,7 +28,14 @@ async def consume():
     while True:
         # XREAD BLOCK 0 → 메시지 올 때까지 무한 대기 (0이면 영원히 블로킹)
         try:
-            results = await r.xread({"pdf:events": last_id}, block=0, count=10)
+            # 기존 코드 (하드코딩)
+            # results = await r.xread({"pdf:events": last_id}, block=0, count=10)
+
+            # pydantic-settings 적용
+            results = await r.xread(
+                {redis_settings.stream_pdf_events: last_id},
+                block=0, count=10
+            )
         except Exception as e:
             print(f"Redis 연결 오류: {e}")
             last_id = msg_id  # 다음엔 이 이후부터 읽기
@@ -32,17 +48,13 @@ async def consume():
             # [ (stream_name, [ (message_id, {field: value, ...}), ... ]) ]
             # 예: [(b'pdf:events', [('1234-0', {'url': 'https://...', 'key': 'abc'})])]
         print("메시지 도착")
-        time.sleep(10)  # 5초 대기
+
         stream_name, messages = results[0]
         for msg_id, fields in messages:
             #loop = asyncio.get_event_loop()
             # await loop.run_in_executor(None, process_message, fields)
-            taskId  = fields["taskId"].strip('"')
-            print(taskId)
-            
-            #await process_message(fields)
-            
-            await r.xadd("pdf:results", {"taskId": taskId ,"hi":"hi" })
+            await process_message(fields)
+            # await r.xadd("pdf:results", {"taskId": taskId ,"hi":"hi" })
             print("메세지전송")
             last_id = msg_id  # 다음엔 이 이후부터 읽기
 
@@ -57,18 +69,27 @@ async  def process_message(fields: dict):
         with Processer(filePath, taskId, reader=READER) as processer:
             metadata_list = processer.parse()
 
-        with XLSXProcessor(metadata_list) as xlsx_processor:
+        with XLSXProcessor(metadata_list,taskId) as xlsx_processor:
             xlsx_processor.find_number()
             output = xlsx_processor.create_xlsx()
                     # ✅ 성공 → Spring으로 결과 전송
-        await r.xadd("pdf:results", {
+
+        # 기존 코드 (하드코딩)
+        # await r.xadd("pdf:results", {
+        #     "taskId": taskId,
+        #     "filePath": output,
+        #     "status": "done"
+        # })
+
+        # pydantic-settings 적용
+        await r.xadd(redis_settings.stream_pdf_results, {
             "taskId": taskId,
             "filePath": output,
-            "originalFileName": originalFileName
-            # "status": "done",
+            # "originalFileName": originalFileName,
+            "status": "done"
             # "resultPath": output
         })
-        
+
 
     except Exception as e:
         # 예외를 반드시 여기서 잡아서 로그 출력
@@ -76,8 +97,12 @@ async  def process_message(fields: dict):
         print(f"[ERROR] process_message 실패: {e}")
         traceback.print_exc()
          # ✅ 실패 → Spring으로 에러 전송
+    #버그 4 - 에러 발생 시 잘못된 스트림에 씀 (stream_consumer.py:75)
+    # 성공 시: "pdf:results" → Spring이 구독 중
+    # 실패 시: "result:events" ← Spring은 이 스트림을 구독하지 않음
+
         # await r.xadd("result:events", {
-        #     "taskId": key,
+        #     "taskId": taskId,
         #     "status": "error",
         #     "message": str(e)
         # })

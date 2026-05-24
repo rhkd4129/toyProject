@@ -26,7 +26,9 @@ export default ({ mode }) => {
       }
     },
     server: {
-      port: 3000,
+      // host: '127.0.0.1',  // IPv4 강제 (이 줄 추가),
+//      이건 IPv6(::1) 관련 문제예요. Windows에서 IPv6 루프백 주소에 바인딩이 안 되는 경우입니다.
+      port: 5173,
     },
   })
 }

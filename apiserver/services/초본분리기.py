@@ -239,4 +239,4 @@ if __name__ == "__main__":
 
 
 
- 
+ #pyinstaller --onefile --console a.py

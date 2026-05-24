@@ -1,20 +1,21 @@
 package com.toyproject.backend.Emitter;
 
-import jakarta.servlet.http.HttpServletResponse;
+import com.toyproject.backend.config.properties.SseProperties;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.nio.file.Paths;
+
 @Service
 @RequiredArgsConstructor
 public class SseEmitterService {
     private static final Long DEFAULT_TIMEOUT = 60L * 1000 * 30;
 
-
     private final EmitterRepository emitterRepository;
+    private final SseProperties sseProperties;
 
     public SseEmitter getEmitter(String taskId) {
         return emitterRepository.get(taskId);
@@ -35,15 +36,21 @@ public class SseEmitterService {
         return emitter;
     }
 
-    public void sendEvent(String taskId) {
-        // 먼저 클라이언트의 SseEmitter를 가져온다
+    public void sendEvent(String taskId, String resultPath) {
+
+        String filePath = Paths.get(resultPath).getFileName().toString();
+        record PdfCompleteEvent(String taskId, String filePath) {}
         SseEmitter emitter = emitterRepository.get(taskId);
         if (emitter != null) {
             try {
-                // 데이터를 클라이언트에게 실어보낸다.
-                emitter.send(SseEmitter.event().id(String.valueOf(taskId)).name("pdf완료").data(taskId));
+                emitter.send(
+                        SseEmitter.event()
+                                .id(taskId)
+                                //.name("pdf완료")
+                                .name(sseProperties.getPdfComplete())
+                                .data(new PdfCompleteEvent(taskId, filePath), MediaType.APPLICATION_JSON)
+                );
             } catch (IOException exception) {
-                // 데이터 전송 중 오류가 발생하면 Emitter를 삭제하고 에러를 완료 상태로 처리
                 emitterRepository.deleteById(taskId);
                 emitter.completeWithError(exception);
             }
@@ -54,7 +61,8 @@ public class SseEmitterService {
         try {
             // 503 방지 + 연결 확인용 dummy
             emitter.send(SseEmitter.event()
-                    .name("connect")
+                    //.name("connect")
+                    .name(sseProperties.getConnect())
                     .data("connected"));
         } catch (IOException e) {
             emitter.completeWithError(e);

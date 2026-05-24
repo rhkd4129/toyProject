@@ -2,8 +2,8 @@ package com.toyproject.backend.redis;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.toyproject.backend.config.properties.RedisStreamProperties;
 import com.toyproject.backend.domain.pdf.dto.PdfRedisRequest;
-import com.toyproject.backend.utils.StreamKey;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.stream.MapRecord;
@@ -19,6 +19,7 @@ import java.util.Map;
 public class RedisService {
 
     private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisStreamProperties  redisStreamProperties;
     private final ObjectMapper objectMapper;
 
     public void addStream(PdfRedisRequest pdfRedisRequest) {
@@ -29,7 +30,7 @@ public class RedisService {
 
         // 2. Map → MapRecord 포장
         MapRecord<String, String, String> record =
-                MapRecord.create(StreamKey.PDF_EVENT.getKey(), fields);
+                MapRecord.create(redisStreamProperties.getPdfEvents(), fields);
 
         // 3. Stream에 추가 (스트림 없으면 자동 생성)
         RecordId recordId = redisTemplate.opsForStream().add(record);
