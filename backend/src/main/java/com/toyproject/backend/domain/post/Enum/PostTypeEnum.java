@@ -2,6 +2,8 @@ package com.toyproject.backend.domain.post.Enum;
 
 import lombok.Getter;
 
+import java.util.Arrays;
+
 @Getter
 public enum PostTypeEnum {
     NOTICE("공지사항"),
@@ -14,5 +16,13 @@ public enum PostTypeEnum {
     PostTypeEnum(String description) {
         this.description = description;
     }
+
+    public static PostTypeEnum fromDescription(String description) {
+        return Arrays.stream(values())
+                .filter(e -> e.description.equals(description))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("없는 타입: " + description));
+    }
+
 
 }

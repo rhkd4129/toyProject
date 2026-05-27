@@ -1,0 +1,53 @@
+
+  FastAPI → .env + python-dotenv
+
+  # apiserver/.env
+  REDIS_STREAM_PDF_EVENTS=pdf:events
+  REDIS_STREAM_PDF_RESULTS=pdf:results
+  SSE_EVENT_PDF_COMPLETE=pdf완료
+
+  # apiserver/constants.py
+  from dotenv import load_dotenv
+  import os
+
+  load_dotenv()  # .env 읽기
+
+  class RedisStream:
+      PDF_EVENTS  = os.getenv("REDIS_STREAM_PDF_EVENTS", "pdf:events")
+      PDF_RESULTS = os.getenv("REDIS_STREAM_PDF_RESULTS", "pdf:results")
+
+  pip install python-dotenv
+
+  ---
+  Vue → .env.development (이미 있음)
+
+  # frontend/.env.development
+  VITE_API_BASE_URL=http://localhost:8085/api
+  VITE_SSE_EVENT_PDF_COMPLETE=pdf완료
+
+  // constants.js
+  export const SSE_EVENT = {
+    PDF_COMPLETE: import.meta.env.VITE_SSE_EVENT_PDF_COMPLETE
+  }
+
+  ---
+  나중에 Docker로 갈 때
+
+  # docker-compose.yml
+  services:
+    spring:
+      environment:
+        - REDIS_STREAM_PDF_EVENTS=pdf:events  # ← 변수명 동일
+    fastapi:
+      environment:
+        - REDIS_STREAM_PDF_EVENTS=pdf:events  # ← 변수명 동일
+
+  코드는 그대로고 값 주입 방법만 바뀌는 거라 수정 없음
+
+  ---
+  흐름 정리
+
+  로컬:   .env 파일 → 각 서비스가 직접 읽음
+  Docker: docker-compose.yml → 환경변수로 주입
+
+  코드 입장에서는 둘 다 "환경변수에서 읽는다" 로 동일

@@ -1,5 +1,6 @@
 package com.toyproject.backend.domain.post.entity;
 import com.toyproject.backend.common.BaseEntity;
+import com.toyproject.backend.domain.post.Enum.PostTypeEnum;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -31,9 +32,12 @@ public class Post extends BaseEntity {
     private Integer likes;
     private Integer dislikes;
 
-    @ManyToOne(fetch =FetchType.LAZY)
-    @JoinColumn(name="posttype_id")
-    private PostType postType;
+//    @ManyToOne(fetch =FetchType.LAZY)
+//    @JoinColumn(name="posttype_id")
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PostTypeEnum postType;  // Post 테이블에 바로 저장
 
 //    @ManyToOne(fetch = FetchType.LAZY)
 //    @JoinColumn(name = "member_id")
@@ -51,10 +55,6 @@ public class Post extends BaseEntity {
 //
 //    }
 
-    public void setPostType(PostType postType){
-        this.postType  = postType;
-        postType.getPostList().add(this);
-    }
 
 //    public void softDelete(){
 //        changeUseStatus(UseStatus.N);
@@ -63,14 +63,14 @@ public class Post extends BaseEntity {
 
 
 // Member member
-    public static Post createPost( String title,String content,PostType postType ){
+    public static Post createPost( String title,String content,PostTypeEnum postTypeEnum ){
         Post post = new Post();
         post.title  = title;
         post.content = content;
         post.likes = 0;
         post.dislikes=0;
 //        post.setMember(member);
-        post.setPostType(postType);
+        post.postType = postTypeEnum;
         return post;
     }
 

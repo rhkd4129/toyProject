@@ -1,5 +1,6 @@
 package com.toyproject.backend.domain.post.service;
 
+import com.toyproject.backend.domain.post.Enum.PostTypeEnum;
 import com.toyproject.backend.domain.post.dto.PostRequestDto;
 import com.toyproject.backend.domain.post.dto.PostResponseDto;
 import com.toyproject.backend.domain.post.entity.Post;
@@ -41,14 +42,11 @@ public class PostService {
     // 작성
     @Transactional
     public void createPost(PostRequestDto dto) {
-        log.info(dto.getPostType());
-
         Post post = Post.createPost(
                 dto.getTitle(),
                 dto.getContent(),
-                postRepository.selectPostType(dto.getPostType()).orElseThrow(() -> new CommonException(ErrorCode.POST_TYPE_NOT_FOUND))
+                PostTypeEnum.fromDescription(dto.getPostType())
         );
-        log.info(post.getPostType().toString());
         postRepository.createPost(post);
     }
 

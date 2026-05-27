@@ -21,7 +21,7 @@ public class PostResponseDto {
         this.content = post.getContent();
         this.likes = post.getLikes();
         this.dislikes = post.getDislikes();
-        this.postType = post.getPostType().getPostType().name();
+        this.postType = post.getPostType().name();
         this.createdAt = post.getCreatedAt();
     }
 }

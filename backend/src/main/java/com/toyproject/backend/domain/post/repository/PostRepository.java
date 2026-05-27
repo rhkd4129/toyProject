@@ -35,25 +35,25 @@ public class PostRepository {
 //                .setMaxResults(limit)
                 .getResultList();
     }
-    public List<PostType> listPostType(){
-        return em.createQuery("select p_t from PostType p_t"
-                        , PostType.class)
-                        .getResultList();
-    }
+//    public List<PostType> listPostType(){
+//        return em.createQuery("select p_t from PostType p_t"
+//                        , PostType.class)
+//                        .getResultList();
+//    }
 //
-    public Optional<PostType> selectPostType(String type){
-        try{
-          PostTypeEnum postTypeEnum = PostTypeEnum.valueOf(type);
-
-          PostType postType =   em.createQuery("select p_t from PostType p_t" +
-                    " where p_t.postType =:type",PostType.class)
-                    .setParameter("type",postTypeEnum)
-                    .getSingleResult();
-            return Optional.of(postType);
-        }catch (NoResultException e){
-            return Optional.empty();
-        }
-    }
+//    public Optional<PostType> selectPostType(String type){
+//        try{
+//          PostTypeEnum postTypeEnum = PostTypeEnum.valueOf(type);
+//
+//          PostType postType =   em.createQuery("select p_t from PostType p_t" +
+//                    " where p_t.postType =:type",PostType.class)
+//                    .setParameter("type",postTypeEnum)
+//                    .getSingleResult();
+//            return Optional.of(postType);
+//        }catch (NoResultException e){
+//            return Optional.empty();
+//        }
+//    }
 
     public Optional<Post> selectPost(Long id) {
         try {
