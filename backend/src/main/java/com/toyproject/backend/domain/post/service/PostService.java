@@ -45,7 +45,8 @@ public class PostService {
         Post post = Post.createPost(
                 dto.getTitle(),
                 dto.getContent(),
-                PostTypeEnum.fromDescription(dto.getPostType())
+                PostTypeEnum.valueOf(dto.getPostType())
+//                PostTypeEnum.fromDescription(dto.getPostType())
         );
         postRepository.createPost(post);
     }
