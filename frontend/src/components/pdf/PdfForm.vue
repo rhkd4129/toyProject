@@ -6,11 +6,17 @@ import {useRouter} from "vue-router";
 const valid = ref(false);
 const store = useStore()
 const router = useRouter();
-const formData = ref({pdfFile: null,});
 
+const pdfTypeOptions = [
+  { title: "XLSX생성기", value: "XLSX" },
+  { title: "초본분리기", value: "DIVIDE" },
+]
+const pdfFile = ref(null);
+const pdfType = ref(null);
 const  pdfResultPath = computed(()=>store.state.pdfStore.pdfResultPath)
 
 const rules = reactive({
+  required: (v) => !!v || "필수 항목입니다.",
   pdfFile: [
     v => !!v || 'pdf를 선택해주세요',
     // v => !v || v.size < 10000000 || '이미지 크기는 10MB 이하여야 합니다'
@@ -30,8 +36,13 @@ const onFileSelected = async (file)=>{
 
 const submitForm = async ()=>{
   try{
-    await store.dispatch("pdfStore/addPdf",formData.value)
-    formData.value.pdfFile = null;
+
+    const pdf = {
+      pdfFile: pdfFile.value,
+      pdfType:pdfType.value
+    }
+    await store.dispatch("pdfStore/addPdf",pdf)
+    pdfFile.value = null;
     // router.push({ name: "posts" });
   }catch (error){
     console.log(error)
@@ -39,7 +50,7 @@ const submitForm = async ()=>{
 
 }
 const resetForm = () => {
-  formData.value.pdfFile = null;
+  pdfFile.value = null;
   valid.value = false;
 };
 
@@ -70,46 +81,53 @@ const resetForm = () => {
 </script>
 
 <template>
-    <VContainer>
-      <v-form v-model="valid" @submit.prevent="submitForm">
-            <v-card class="pa-4">
-              <v-card-title class="text-h5 mb-4"></v-card-title>
-              <v-file-input
-                  v-model="formData.pdfFile"
-                  @change="onFileSelected"
-                  :rules="rules.pdfFile"
-                  label="PDF 업로드"
-                  accept="application/pdf"
-                  prepend-icon="mdi-file-pdf-box"
-                  outlined
-                  dense
-              ></v-file-input>
+  <v-card flat border max-width="800">
+    <v-card-title class="pa-4">생성</v-card-title>
+    <v-divider />
+      <v-card-text>
+        <v-form v-model="valid" @submit.prevent="submitForm">
+            <v-select v-model="pdfType"
+            :items="pdfTypeOptions"
+            :rules="[rules.required]"
+            label="분류"
+            class="mb-3"></v-select>
 
 
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn
-                    color="primary"
-                    type="submit"
-                    :disabled="!valid"
-                >
-                  생성하기
-                </v-btn>
-                <v-btn
-                    color="grey"
-                    text
-                    @click="resetForm"
-                >
-                  초기화
-                </v-btn>
-              </v-card-actions>
-          </v-card>
-      </v-form>
-<!--      <div>-->
-<!--        <button @click="downloadPdf()">파일다룬로드 test</button>-->
-<!--      </div>-->
+              <v-card class="pa-4">
+                <v-card-title class="text-h5 mb-4"></v-card-title>
+                <v-file-input
+                    v-model="pdfFile"
+                    @change="onFileSelected"
+                    :rules="rules.pdfFile"
+                    label="PDF 업로드"
+                    accept="application/pdf"
+                    prepend-icon="mdi-file-pdf-box"
+                    outlined
+                    dense
+                ></v-file-input>
 
-    </VContainer>
+
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                      color="primary"
+                      type="submit"
+                      :disabled="!valid"
+                  >
+                    생성하기
+                  </v-btn>
+                  <v-btn
+                      color="grey"
+                      text
+                      @click="resetForm"
+                  >
+                    초기화
+                  </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-form>
+    </v-card-text>
+  </v-card>
 </template>
 
 <style scoped>

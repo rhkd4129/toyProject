@@ -2,6 +2,14 @@ vue에서 pdfForm에서 v-model 부분
 메시지 큐에 저정할 값 filepath와 name?
 
 5.24
-
-
 현재는 pdf에서 xlsx로 변환하는게 하드코딩되어잇음 ,
+
+5/28
+- FastAPI Redis 결과 메시지에 status 필드 추가 (SUCCESS/FAIL)
+- Spring cleanup API (DELETE /api/pdf/cleanup/{taskId})
+- Vue 페이지 이탈 시 cleanup 호출 (beforeRouteLeave)
+
+  1. taskId 단일화 - 작업용/외부노출용 UUID를 분리하지 않고 taskId 하나로 통 (taskId는 외부주입)
+  2. coumer 부분에 작업 완료 서비스 호출 부분 추가 (추후 stats필드추가하여 분기)
+  3. store - eventSource state 추가, 파일 재선택 시 기존 SSE 연결 해제 처리 테스트 필요
+  4. pdfForm에서 pdfType받는 부분 추가 테스트 필요

@@ -19,7 +19,9 @@ import {useStore} from "vuex";
 </script>
 
 <template>
+  <v-container>
   <PdfForm/>
+  </v-container>
 <!--  <p>XLSX 생성하기 </p>-->
 <!--  <PdfUploadForm-->
 <!--      :rules = "myRules"-->
@@ -32,3 +34,4 @@ import {useStore} from "vuex";
 <style scoped>
 
 </style>
+

@@ -20,7 +20,7 @@ import java.net.MalformedURLException;
 
 @RestController
 @RequiredArgsConstructor
-@Slf4j
+@Slf
 @RequestMapping("/api/pdf")
 public class PdfController {
 
@@ -46,10 +46,12 @@ public class PdfController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createPdf(@RequestPart("newPdf") MultipartFile newPdf ,
-                                       @RequestPart("pdfTaskId") String pdfTaskId) {
+                                       @RequestPart("pdfTaskId") String pdfTaskId,
+                                       @RequestPart("pdfTaskId") String pdfType
+                                       ) {
         log.info(" ============= createPdf 진입 ================");
         Result result = new Result();
-        PdfRedisRequest pdfRedisRequest = pdfService.createPdf(newPdf,pdfTaskId);
+        PdfRedisRequest pdfRedisRequest = pdfService.createPdf(newPdf,pdfTaskId,pdfType);
         result.setData(pdfRedisRequest);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }

@@ -8,7 +8,8 @@ const pdfStore={
     state:()=>({
         pdf:null,
         pdfTaskId :null,
-        pdfResultPath: null,  // 추가
+        pdfResultPath: null,
+        eventSource: null,
     }),
     getters:{
         pdf(state){return state.pdf},
@@ -17,8 +18,8 @@ const pdfStore={
     mutations:{
         setPdf(state,value){state.pdf = value},
         setPdfTaskId(state,value){state.pdfTaskId  = value},
-        setResultPath(state, path) {   state.pdfResultPath = path;}
-
+        setResultPath(state, path) {   state.pdfResultPath = path;},
+        setEventSource(state, es) { state.eventSource = es; },
     },
 
     actions:{
@@ -49,12 +50,19 @@ const pdfStore={
         async addPdf({state,commit},value) {
             const formData = new FormData();
             formData.append("newPdf", value.pdfFile); // JSON.stringify 제
+            formData.append("pdfType", value.pdfType)
             formData.append("pdfTaskId",state.pdfTaskId)
             const result = await createPdf(formData)
             console.log(result)
         },
         async connectEmitter({ state, commit }) {
+            if (state.eventSource) {
+                state.eventSource.close();
+                commit("setEventSource", null);
+            }
+
             const es = conEmitter(state.pdfTaskId);
+            commit("setEventSource", es);
 
             es.addEventListener(import.meta.env.VITE_SSE_EVENT_CONNECT, (event) => {
                 console.log("연결확인:", event.data);
@@ -63,12 +71,14 @@ const pdfStore={
             es.addEventListener(import.meta.env.VITE_SSE_EVENT_PDF_DONE, (event) => {
                 console.log("완료:", event.data);
                 const { taskId, filePath } = JSON.parse(event.data);
-                commit("setResultPath", taskId);  // 결과경로 저장
-                es.close();                            // 연결 끊기
+                commit("setResultPath", taskId);
+                commit("setEventSource", null);
+                es.close();
             });
 
             es.onerror = (error) => {
                 console.error("SSE 에러:", error);
+                commit("setEventSource", null);
                 es.close();
             };
         },

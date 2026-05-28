@@ -2,8 +2,11 @@ package com.toyproject.backend.domain.pdf.service;
 
 
 import com.toyproject.backend.Emitter.EmitterRepository;
+import com.toyproject.backend.domain.pdf.Enum.PdfTypeEnum;
 import com.toyproject.backend.domain.pdf.dto.PdfRedisRequest;
 import com.toyproject.backend.domain.pdf.dto.PdfResponseDTO;
+import com.toyproject.backend.domain.pdf.entity.Pdf;
+import com.toyproject.backend.domain.pdf.repository.PdfRepository;
 import com.toyproject.backend.error.CommonException;
 import com.toyproject.backend.error.ErrorCode;
 import com.toyproject.backend.redis.RedisService;
@@ -11,6 +14,7 @@ import com.toyproject.backend.utils.FileUtils;
 import com.toyproject.backend.utils.Result;
 import com.toyproject.backend.storage.StorageService;
 import com.toyproject.backend.Emitter.SseEmitterService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -26,29 +30,27 @@ import java.util.UUID;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PdfService {
 
     private final FastApiClient fastApiClient;
     private final StorageService storageService;
+    private final PdfRepository pdfRepository;
     private final RedisService redisService;
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final SseEmitterService sseEmitterService;
-    private final EmitterRepository emitterRepository;
 
 
 
     public String createPdfTaskId(){
-
-
-
-
         return  UUID.randomUUID().toString();
     }
 
-    public PdfRedisRequest createPdf(MultipartFile file,String pdfTaskId) {
+    public PdfRedisRequest createPdf(MultipartFile file,String pdfTaskId,String pdfType) {
         try {
             //TODO 리팩토링? storageService.uploadFile
+
             PdfRedisRequest pdfRedisRequest = storageService.uploadFile(pdfTaskId, file);
+             Pdf pdf = Pdf.createPdf(pdfTaskId, PdfTypeEnum.valueOf(pdfType),file.getOriginalFilename());
+            pdfRepository.createPdf(pdf);
             redisService.addStream(pdfRedisRequest);
             return pdfRedisRequest;
         } catch (IOException e) {
@@ -56,12 +58,21 @@ public class PdfService {
             throw new CommonException(ErrorCode.FILE_UPLOAD_FAILED);
         }
     }
-
+    // PdfService.java
+    @Transactional
+    public void completePdf(String taskId) {
+        Pdf pdf = pdfRepository.findByTaskId(taskId).orElseThrow(() -> new CommonException(ErrorCode.BOARD_N0_SUCH));
+        pdf.complete();
+    }
+    @Transactional
+    public void failPdf(String taskId) {
+        Pdf pdf = pdfRepository.findByTaskId(taskId)
+                .orElseThrow(() -> new CommonException(ErrorCode.BOARD_N0_SUCH));
+        pdf.fail();
+    }
 
     public PdfResponseDTO getPdf(String taskId) throws MalformedURLException {
         return storageService.downloadFile(taskId);
-
     }
- 
 
 }

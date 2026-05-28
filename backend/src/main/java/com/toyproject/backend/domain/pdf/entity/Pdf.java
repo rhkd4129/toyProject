@@ -1,17 +1,18 @@
 package com.toyproject.backend.domain.pdf.entity;
 
 
+import com.toyproject.backend.domain.pdf.Enum.PdfStatus;
 import com.toyproject.backend.domain.pdf.Enum.PdfTypeEnum;
 import com.toyproject.backend.utils.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.UUID;
+import java.time.LocalDateTime;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@Entity
 @Table(name="PDF")
 public class Pdf extends BaseEntity {
     @Id
@@ -26,23 +27,39 @@ public class Pdf extends BaseEntity {
             generator = "PDF_SEQ")
     private Long id;
 
-
-    //중복값을 허ㅇ용하지 않고 null를 허용하지 않는데 최초  insert이후 업데이트 불가하다.
     @Column(unique = true, nullable = false, updatable = false)
-    private String uuid;
+    private String taskId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PdfTypeEnum pdfType;
 
+    @Column(nullable = false)
+    private String originalFilename;
 
-    private boolean completed = false;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PdfStatus status;
 
-    public static Pdf createPdf(PdfTypeEnum pdfType){
+    private LocalDateTime completedAt;
+
+    public static Pdf createPdf(String taskId, PdfTypeEnum pdfType, String originalFilename) {
         Pdf pdf = new Pdf();
-        pdf.uuid = UUID.randomUUID().toString();
+        pdf.taskId = taskId;
         pdf.pdfType = pdfType;
+        pdf.originalFilename = originalFilename;
+        pdf.status = PdfStatus.PROCESSING;
         return pdf;
+    }
+
+    public void complete() {
+        this.status = PdfStatus.COMPLETED;
+        this.completedAt = LocalDateTime.now();
+    }
+
+    public void fail() {
+        this.status = PdfStatus.FAILED;
+        this.completedAt = LocalDateTime.now();
     }
 
 }
