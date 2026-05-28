@@ -16,7 +16,7 @@ public class PdfRedisRequest {
     }
 
     public static PdfRedisRequest to(String taskId,String filePath , String originalFileName,String pdfType){
-        return  new PdfRedisRequest(taskId,filePath,originalFileName,String pdfType);
+        return  new PdfRedisRequest(taskId,filePath,originalFileName, pdfType);
     }
 
     private String taskId;
