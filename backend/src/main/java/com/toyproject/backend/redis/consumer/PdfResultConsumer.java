@@ -1,19 +1,14 @@
 package com.toyproject.backend.redis.consumer;
 
 import com.toyproject.backend.Emitter.SseEmitterService;
-import com.toyproject.backend.domain.pdf.entity.Pdf;
-import com.toyproject.backend.domain.pdf.repository.PdfRepository;
 import com.toyproject.backend.domain.pdf.service.PdfService;
-import com.toyproject.backend.domain.post.entity.Post;
-import com.toyproject.backend.error.CommonException;
-import com.toyproject.backend.error.ErrorCode;
 import com.toyproject.backend.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
 
 import java.util.Optional;
 
@@ -32,22 +27,22 @@ public class PdfResultConsumer implements StreamListener<String, MapRecord<Strin
             log.info("redis results 스트림 도착 ");
             String taskId = message.getValue().get("taskId");
             String resultPath    = message.getValue().get("filePath");
-//            String status    = message.getValue().get("status");
+            String status    = message.getValue().get("status");
 
             log.info("{}",taskId);
             log.info("{}",resultPath);
+            log.info("{}",status);
 
-            sseEmitterService.sendEvent(taskId,resultPath);
-            pdfService.completePdf(taskId);
-
-
-//            if ("SUCCESS".equals(status)) {
-//                pdfService.completePdf(taskId);
-//                sseEmitterService.sendEvent(taskId, resultPath);
-//            } else {
-//                pdfService.failPdf(taskId);
-                    // 재시도?
-//                // Vue에 실패 이벤트 전송
-//            }
+            if ("COMPLETED".equals(status)) {
+                pdfService.completePdf(taskId);
+                sseEmitterService.sendEvent(taskId, resultPath,status);
+            } else if("FAILED".equals(status)) {
+                String errorMessage    = message.getValue().get("errorMessage");
+                log.info("{}",errorMessage);
+                pdfService.failPdf(taskId);
+                sseEmitterService.sendErrorMessage(taskId,status,errorMessage);
+                // 재시도?
+                // Vue에 실패 이벤트 전송
+            }
         }
 }

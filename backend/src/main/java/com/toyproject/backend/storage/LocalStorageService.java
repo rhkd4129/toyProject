@@ -28,13 +28,13 @@ public class LocalStorageService implements StorageService{
 
 
     @Override
-    public PdfRedisRequest uploadFile(String taskId, MultipartFile file) throws IOException {
+    public PdfRedisRequest uploadFile(String taskId, MultipartFile file,String pdfType) throws IOException {
         String originalFilename = file.getOriginalFilename(); // "abc.pdf"
         String fileName= FileUtils.buildFileName(taskId,originalFilename);
         String filePath = Paths.get(uploadPathPattern, fileName).toString();
         log.info("파일업로드 => {}",filePath);
         FileUtils.uploadFile(fileName, file.getBytes(), uploadPathPattern);
-        return new PdfRedisRequest(taskId, filePath,originalFilename);
+        return new PdfRedisRequest(taskId, filePath,originalFilename,pdfType);
     }
 
     @Override

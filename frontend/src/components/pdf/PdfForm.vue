@@ -14,7 +14,7 @@ const pdfTypeOptions = [
 const pdfFile = ref(null);
 const pdfType = ref(null);
 const  pdfResultPath = computed(()=>store.state.pdfStore.pdfResultPath)
-
+const pdfErrorMessage = computed(()=>store.getters["pdfStore/errorMessage"])
 const rules = reactive({
   required: (v) => !!v || "필수 항목입니다.",
   pdfFile: [
@@ -76,6 +76,11 @@ const resetForm = () => {
 
 
   })
+
+watch(pdfErrorMessage, async(newVal, oldVal)  => {
+  console.log(newVal, oldVal)
+  alert(newVal)
+})
 
 
 </script>

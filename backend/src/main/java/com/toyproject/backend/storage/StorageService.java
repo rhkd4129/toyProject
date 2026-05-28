@@ -13,7 +13,7 @@ import java.net.MalformedURLException;
 
 public interface StorageService {
 
-    public PdfRedisRequest uploadFile(String taskId, MultipartFile file) throws IOException;
+    public PdfRedisRequest uploadFile(String taskId, MultipartFile file,String pdfType) throws IOException;
 
     public PdfResponseDTO downloadFile(String taskId)throws MalformedURLException;
 }

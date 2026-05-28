@@ -20,7 +20,7 @@ import java.net.MalformedURLException;
 
 @RestController
 @RequiredArgsConstructor
-@Slf
+@Slf4j
 @RequestMapping("/api/pdf")
 public class PdfController {
 

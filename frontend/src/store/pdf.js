@@ -10,16 +10,19 @@ const pdfStore={
         pdfTaskId :null,
         pdfResultPath: null,
         eventSource: null,
+        errorMessage:null,
     }),
     getters:{
         pdf(state){return state.pdf},
-        pdfTaskId(state){return state.pdfTaskId}
+        pdfTaskId(state){return state.pdfTaskId},
+        errorMessage(state){return state.errorMessage}
     },
     mutations:{
         setPdf(state,value){state.pdf = value},
         setPdfTaskId(state,value){state.pdfTaskId  = value},
         setResultPath(state, path) {   state.pdfResultPath = path;},
         setEventSource(state, es) { state.eventSource = es; },
+        setErrorMessage(state,value){state.errorMessage = value;}
     },
 
     actions:{
@@ -70,8 +73,14 @@ const pdfStore={
 
             es.addEventListener(import.meta.env.VITE_SSE_EVENT_PDF_DONE, (event) => {
                 console.log("완료:", event.data);
-                const { taskId, filePath } = JSON.parse(event.data);
-                commit("setResultPath", taskId);
+                const { taskId, filePath ,status , errorMessage} = JSON.parse(event.data);
+                if(status == "COMPLETED"){
+                    commit("setResultPath", taskId);
+                }
+                else  if(status == "FAILD"){
+                    commit("setErrorMessage", errorMessage);
+                }
+
                 commit("setEventSource", null);
                 es.close();
             });

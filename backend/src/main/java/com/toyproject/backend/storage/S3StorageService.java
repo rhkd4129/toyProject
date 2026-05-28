@@ -39,7 +39,7 @@ public class S3StorageService implements StorageService{
 
 
     @Override
-    public PdfRedisRequest uploadFile(String taskId, MultipartFile file) throws IOException {
+    public PdfRedisRequest uploadFile(String taskId, MultipartFile file,String pdfType) throws IOException {
         String originalFilename = file.getOriginalFilename(); // "abc.pdf"
         String fileName = FileUtils.buildFileName(taskId,originalFilename);
         String filePath = uploadPathPattern+fileName;
@@ -54,7 +54,7 @@ public class S3StorageService implements StorageService{
                 // 업로드할 실제 파일 데이터 (바이트 스트림) , 파일 크기 (AWS가 얼마나 읽을지 알아야 함)
         );
         String presignedUrl = generatePresignedUrl(filePath);
-        return new PdfRedisRequest(taskId,presignedUrl, filePath); // presignedUrl이 path 역할
+        return new PdfRedisRequest(taskId,presignedUrl, filePath,pdfType); // presignedUrl이 path 역할
     }
 
     @Override

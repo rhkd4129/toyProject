@@ -48,7 +48,7 @@ public class PdfService {
         try {
             //TODO 리팩토링? storageService.uploadFile
 
-            PdfRedisRequest pdfRedisRequest = storageService.uploadFile(pdfTaskId, file);
+            PdfRedisRequest pdfRedisRequest = storageService.uploadFile(pdfTaskId, file,pdfType);
              Pdf pdf = Pdf.createPdf(pdfTaskId, PdfTypeEnum.valueOf(pdfType),file.getOriginalFilename());
             pdfRepository.createPdf(pdf);
             redisService.addStream(pdfRedisRequest);

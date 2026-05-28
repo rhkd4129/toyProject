@@ -65,6 +65,9 @@ async  def process_message(fields: dict):
     taskId = fields["taskId"].strip('"')
     filePath = fields["filePath"].strip('"')
     originalFileName = fields["originalFileName"].strip('"')
+    pdfType = fields['pdfType']
+
+    
     try:
         with Processer(filePath, taskId, reader=READER) as processer:
             metadata_list = processer.parse()
@@ -72,21 +75,17 @@ async  def process_message(fields: dict):
         with XLSXProcessor(metadata_list,taskId) as xlsx_processor:
             xlsx_processor.find_number()
             output = xlsx_processor.create_xlsx()
-                    # ✅ 성공 → Spring으로 결과 전송
+            
 
         # 기존 코드 (하드코딩)
-        # await r.xadd("pdf:results", {
-        #     "taskId": taskId,
-        #     "filePath": output,
-        #     "status": "done"
-        # })
-
+        # await r.xadd("pdf:results", {})
+        
         # pydantic-settings 적용
         await r.xadd(redis_settings.stream_pdf_results, {
             "taskId": taskId,
             "filePath": output,
             # "originalFileName": originalFileName,
-            "status": "done"
+            "status": "COMPLETED"
             # "resultPath": output
         })
 
@@ -96,11 +95,14 @@ async  def process_message(fields: dict):
         import traceback
         print(f"[ERROR] process_message 실패: {e}")
         traceback.print_exc()
-         # ✅ 실패 → Spring으로 에러 전송
-    #버그 4 - 에러 발생 시 잘못된 스트림에 씀 (stream_consumer.py:75)
-    # 성공 시: "pdf:results" → Spring이 구독 중
-    # 실패 시: "result:events" ← Spring은 이 스트림을 구독하지 않음
-
+        await r.xadd(redis_settings.stream_pdf_results, {
+            "taskId": taskId,
+            "filePath": output,
+            "originalFileName": originalFileName,
+            "status": "FAILED",
+            "errorMessage":e
+            # "resultPath": output
+        })
         # await r.xadd("result:events", {
         #     "taskId": taskId,
         #     "status": "error",

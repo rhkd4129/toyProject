@@ -36,10 +36,9 @@ public class SseEmitterService {
         return emitter;
     }
 
-    public void sendEvent(String taskId, String resultPath) {
-
+    public void sendEvent(String taskId, String resultPath,String status) {
         String filePath = Paths.get(resultPath).getFileName().toString();
-        record PdfCompleteEvent(String taskId, String filePath) {}
+        record PdfCompleteEvent(String taskId, String filePath , String status) {}
         SseEmitter emitter = emitterRepository.get(taskId);
         if (emitter != null) {
             try {
@@ -48,7 +47,7 @@ public class SseEmitterService {
                                 .id(taskId)
                                 //.name("pdf완료")
                                 .name(sseProperties.getPdfComplete())
-                                .data(new PdfCompleteEvent(taskId, filePath), MediaType.APPLICATION_JSON)
+                                .data(new PdfCompleteEvent(taskId, filePath,status), MediaType.APPLICATION_JSON)
                 );
             } catch (IOException exception) {
                 emitterRepository.deleteById(taskId);
@@ -56,6 +55,25 @@ public class SseEmitterService {
             }
         }
     }
+    public void sendErrorMessage(String taskId, String status , String errorMessage) {
+        record PdfCompleteEvent(String taskId, String status, String errorMessage) {
+        }
+        SseEmitter emitter = emitterRepository.get(taskId);
+        if (emitter != null) {
+            try {
+                emitter.send(
+                        SseEmitter.event()
+                                .id(taskId)
+                                .name(sseProperties.getPdfComplete())
+                                .data(new PdfCompleteEvent(taskId, status, errorMessage), MediaType.APPLICATION_JSON)
+                );
+            } catch (IOException exception) {
+                emitterRepository.deleteById(taskId);
+                emitter.completeWithError(exception);
+            }
+        }
+    }
+
     public SseEmitter subscribePdf(String taskId) {
         SseEmitter emitter = createEmitter(taskId);
         try {
