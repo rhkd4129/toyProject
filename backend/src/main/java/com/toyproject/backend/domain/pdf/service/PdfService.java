@@ -14,7 +14,7 @@ import com.toyproject.backend.utils.FileUtils;
 import com.toyproject.backend.utils.Result;
 import com.toyproject.backend.storage.StorageService;
 import com.toyproject.backend.Emitter.SseEmitterService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
