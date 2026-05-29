@@ -26,14 +26,14 @@ public class PdfResultConsumer implements StreamListener<String, MapRecord<Strin
             log.info("--------- onMessage  ------");
             log.info("redis results 스트림 도착 ");
             String taskId = message.getValue().get("taskId");
-            String resultPath    = message.getValue().get("filePath");
+
             String status    = message.getValue().get("status");
 
             log.info("{}",taskId);
-            log.info("{}",resultPath);
             log.info("{}",status);
 
             if ("COMPLETED".equals(status)) {
+                String resultPath    = message.getValue().get("resultPath");
                 pdfService.completePdf(taskId);
                 sseEmitterService.sendEvent(taskId, resultPath,status);
             } else if("FAILED".equals(status)) {

@@ -44,6 +44,7 @@ public class PdfService {
         return  UUID.randomUUID().toString();
     }
 
+    @Transactional
     public PdfRedisRequest createPdf(MultipartFile file,String pdfTaskId,String pdfType) {
         try {
             //TODO 리팩토링? storageService.uploadFile

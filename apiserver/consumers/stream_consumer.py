@@ -61,6 +61,11 @@ async def consume():
 
 # stream_consumer.py
 async  def process_message(fields: dict):
+
+    # {'taskId': '"f7ddd661-d266-4570-a53c-9505879480b5"', 
+    # 'pdfType': '"XLSX"',
+    #  'filePath': '"C:\\\\Server\\\\PDF\\\\f7ddd661-d266-4570-a53c-9505879480b5.pdf"',
+    #  'originalFileName': '"test.pdf"'}
     print(f"process_message 진입: {fields}")
     taskId = fields["taskId"].strip('"')
     filePath = fields["filePath"].strip('"')
@@ -83,7 +88,7 @@ async  def process_message(fields: dict):
         # pydantic-settings 적용
         await r.xadd(redis_settings.stream_pdf_results, {
             "taskId": taskId,
-            "filePath": output,
+            "resultPath": output,
             # "originalFileName": originalFileName,
             "status": "COMPLETED"
             # "resultPath": output
@@ -97,7 +102,6 @@ async  def process_message(fields: dict):
         traceback.print_exc()
         await r.xadd(redis_settings.stream_pdf_results, {
             "taskId": taskId,
-            "filePath": output,
             "originalFileName": originalFileName,
             "status": "FAILED",
             "errorMessage":e

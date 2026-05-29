@@ -58,8 +58,8 @@ public class S3StorageService implements StorageService{
     }
 
     @Override
-    public PdfResponseDTO downloadFile(String taskId) {
-        return new PdfResponseDTO(taskId);
+    public PdfResponseDTO downloadFile(String fileName) {
+        return new PdfResponseDTO(fileName);
     }
 
     private String generatePresignedUrl(String filePath) {

@@ -13,7 +13,7 @@ const pdfTypeOptions = [
 ]
 const pdfFile = ref(null);
 const pdfType = ref(null);
-const  pdfResultPath = computed(()=>store.state.pdfStore.pdfResultPath)
+const  resultFileName = computed(()=>store.state.pdfStore.pdfResultFileName)
 const pdfErrorMessage = computed(()=>store.getters["pdfStore/errorMessage"])
 const rules = reactive({
   required: (v) => !!v || "필수 항목입니다.",
@@ -64,7 +64,7 @@ const resetForm = () => {
 //   URL.revokeObjectURL(pdf.blobUrl)
 // // 메모리 해제 (중요!)
 // }
-  watch(pdfResultPath, async(newVal, oldVal)  => {
+  watch(resultFileName, async(newVal, oldVal)  => {
     console.log(newVal, oldVal)
     const pdf = await store.dispatch("pdfStore/getPdf",newVal)
     const a = document.createElement('a')

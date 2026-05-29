@@ -37,8 +37,8 @@ public class SseEmitterService {
     }
 
     public void sendEvent(String taskId, String resultPath,String status) {
-        String filePath = Paths.get(resultPath).getFileName().toString();
-        record PdfCompleteEvent(String taskId, String filePath , String status) {}
+        String fileName = Paths.get(resultPath).getFileName().toString();
+        record PdfCompleteEvent(String taskId, String fileName , String status) {}
         SseEmitter emitter = emitterRepository.get(taskId);
         if (emitter != null) {
             try {
@@ -47,7 +47,7 @@ public class SseEmitterService {
                                 .id(taskId)
                                 //.name("pdf완료")
                                 .name(sseProperties.getPdfComplete())
-                                .data(new PdfCompleteEvent(taskId, filePath,status), MediaType.APPLICATION_JSON)
+                                .data(new PdfCompleteEvent(taskId, fileName,status), MediaType.APPLICATION_JSON)
                 );
             } catch (IOException exception) {
                 emitterRepository.deleteById(taskId);

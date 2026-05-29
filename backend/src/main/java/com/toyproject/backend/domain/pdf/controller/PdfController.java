@@ -47,7 +47,7 @@ public class PdfController {
     @PostMapping("/create")
     public ResponseEntity<?> createPdf(@RequestPart("newPdf") MultipartFile newPdf ,
                                        @RequestPart("pdfTaskId") String pdfTaskId,
-                                       @RequestPart("pdfTaskId") String pdfType
+                                       @RequestPart("pdfType") String pdfType
                                        ) {
         log.info(" ============= createPdf 진입 ================");
         Result result = new Result();
@@ -56,10 +56,10 @@ public class PdfController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @GetMapping("/download/{taskId}")
-    public ResponseEntity<?> downloadPdf(@PathVariable String taskId) throws MalformedURLException {
+    @GetMapping("/download/{fileName}")
+    public ResponseEntity<?> downloadPdf(@PathVariable String fileName) throws MalformedURLException {
         log.info(" ============= downloadPdf 진입 ================");
-        PdfResponseDTO pdfResponseDTO = pdfService.getPdf(taskId);
+        PdfResponseDTO pdfResponseDTO = pdfService.getPdf(fileName);
         String contentDisposition = "attachment; filename=\"" + pdfResponseDTO.getEncodedFilename() + "\"";
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)

@@ -38,8 +38,7 @@ public class LocalStorageService implements StorageService{
     }
 
     @Override
-    public PdfResponseDTO downloadFile(String taskId) throws MalformedURLException {
-        String fileName = taskId+".xlsx";
+    public PdfResponseDTO downloadFile(String fileName) throws MalformedURLException {
         String encodedFilename = null;
         Resource resource = null;
         String filePath = Paths.get(uploadPathPattern, fileName).toString();

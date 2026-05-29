@@ -51,4 +51,19 @@ public class RedisConfig {
 
         return StreamMessageListenerContainer.create(factory, options);
     }
+
+    @Bean
+    public RedisTemplate<String, String> streamRedisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, String> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+
+        StringRedisSerializer stringSerializer = new StringRedisSerializer();
+
+        template.setKeySerializer(stringSerializer);
+        template.setValueSerializer(stringSerializer);
+        template.setHashKeySerializer(stringSerializer);
+        template.setHashValueSerializer(stringSerializer);  // ← 핵심! String-String
+
+        return template;
+    }
 }

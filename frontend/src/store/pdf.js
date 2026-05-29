@@ -8,7 +8,7 @@ const pdfStore={
     state:()=>({
         pdf:null,
         pdfTaskId :null,
-        pdfResultPath: null,
+        pdfResultFileName: null,
         eventSource: null,
         errorMessage:null,
     }),
@@ -20,7 +20,7 @@ const pdfStore={
     mutations:{
         setPdf(state,value){state.pdf = value},
         setPdfTaskId(state,value){state.pdfTaskId  = value},
-        setResultPath(state, path) {   state.pdfResultPath = path;},
+        setResultFileName(state, fileName) {   state.pdfResultFileName = fileName;},
         setEventSource(state, es) { state.eventSource = es; },
         setErrorMessage(state,value){state.errorMessage = value;}
     },
@@ -73,9 +73,9 @@ const pdfStore={
 
             es.addEventListener(import.meta.env.VITE_SSE_EVENT_PDF_DONE, (event) => {
                 console.log("완료:", event.data);
-                const { taskId, filePath ,status , errorMessage} = JSON.parse(event.data);
+                const { taskId, fileName ,status , errorMessage} = JSON.parse(event.data);
                 if(status == "COMPLETED"){
-                    commit("setResultPath", taskId);
+                    commit("setResultFileName", fileName);
                 }
                 else  if(status == "FAILD"){
                     commit("setErrorMessage", errorMessage);

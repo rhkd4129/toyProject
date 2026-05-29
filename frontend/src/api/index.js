@@ -74,9 +74,9 @@ export async function createPdf(formData){
         throw error;
     }
 }
-export async function downloadPdf(taskId){
+export async function downloadPdf(fileName){
     try{
-        const response  = await apiClient.get(`/pdf/download/${taskId}`,{
+        const response  = await apiClient.get(`/pdf/download/${fileName}`,{
             responseType: 'blob'
         })
 
