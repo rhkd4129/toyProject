@@ -6,17 +6,17 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from datetime import datetime
+from core.config import path_settings
+
 class XLSXProcessor:
 
     DIVISION_NAME = "채무자"
     DIVISION_NUMBER ="사건번호"
     HEADER    = ["담당자", "채권번호", "채무자", "사건명", "사건번호", "법원", "결정일", "결정금액"]
 
-
-    XLSX_FILE_NAME = r"C:\Server\PDF\CONFIG\{year}사건부.xlsx"
-    FONT_PATH = r"C:\Server\PDF\CONFIG\NANUMGOTHIC.TTF"
-    OUTPUT_PATH = r"C:\Server\PDF\{task_id}.xlsx"
+    XLSX_FILE_NAME = path_settings.xlsx_file_name
+    FONT_PATH      = path_settings.font_path
+    OUTPUT_PATH    = path_settings.output_path
 
     
     

@@ -1,0 +1,53 @@
+services:
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    build: ./backend
+    expose:
+      - "8085"
+    volumes:
+      - pdf_data:/app/pdf
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # Oracle(EC2 호스트) 접근용
+    depends_on:
+      - redis
+    networks:
+      - app-network
+
+  apiserver:
+    build: ./apiserver
+    expose:
+      - "8084"
+    volumes:
+      - pdf_data:/app/pdf
+      - easyocr_cache:/root/.EasyOCR   # 모델 재다운로드 방지
+    depends_on:
+      - redis
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+
+volumes:
+  pdf_data:      # backend ↔ apiserver 파일 공유
+  easyocr_cache: # EasyOCR 언어 모델 캐시
+  redis_data:    # Redis 데이터 영속성
+
+networks:
+  app-network:
+    driver: bridge

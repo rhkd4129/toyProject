@@ -69,7 +69,6 @@ async  def process_message(fields: dict):
     print(f"process_message 진입: {fields}")
     taskId = fields["taskId"].strip('"')
     filePath = fields["filePath"].strip('"')
-    originalFileName = fields["originalFileName"].strip('"')
     pdfType = fields['pdfType']
 
     
@@ -79,7 +78,7 @@ async  def process_message(fields: dict):
 
         with XLSXProcessor(metadata_list,taskId) as xlsx_processor:
             xlsx_processor.find_number()
-            output = xlsx_processor.create_xlsx()
+            resultFilePath = xlsx_processor.create_xlsx()
             
 
         # 기존 코드 (하드코딩)
@@ -88,10 +87,10 @@ async  def process_message(fields: dict):
         # pydantic-settings 적용
         await r.xadd(redis_settings.stream_pdf_results, {
             "taskId": taskId,
-            "resultPath": output,
-            # "originalFileName": originalFileName,
-            "status": "COMPLETED"
-            # "resultPath": output
+            "resultPath": resultFilePath,
+            "status": "COMPLETED",
+            "filePath": filePath
+        
         })
 
 
@@ -102,10 +101,10 @@ async  def process_message(fields: dict):
         traceback.print_exc()
         await r.xadd(redis_settings.stream_pdf_results, {
             "taskId": taskId,
-            "originalFileName": originalFileName,
+            "filePath": filePath,
             "status": "FAILED",
             "errorMessage":e
-            # "resultPath": output
+        
         })
         # await r.xadd("result:events", {
         #     "taskId": taskId,

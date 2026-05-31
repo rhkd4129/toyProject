@@ -3,21 +3,45 @@ server:
   port: 8085
 
 fastapi:
-  url: http://localhost:8084
+  url: http://apiserver:8084
+
+sse:
+  event:
+    pdf-complete: "${SSE_EVENT_PDF_COMPLETE:pdf완료}"
+    connect:      "${SSE_EVENT_CONNECT:connect}"
+
+redis:
+  stream:
+    pdf-events:  "${REDIS_STREAM_PDF_EVENTS:pdf:events}"
+    pdf-results: "${REDIS_STREAM_PDF_RESULTS:pdf:results}"
 
 spring:
   servlet:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
-
+      location: /app/pdf
 
   datasource:
     driver-class-name: oracle.jdbc.driver.OracleDriver
-    url: jdbc:oracle:thin:@localhost:1521/xe
-    #    url: jdbc:oracle:thin:@localhost:1521/orcl
+    # EC2 생성 후 내부 IP로 교체 필요
+    url: jdbc:oracle:thin:@EC2_INTERNAL_IP:1521/xe
     username: MYPROJECT
     password: tiger2
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+      database: 0
+      timeout: 3000
+      client-type: lettuce
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: -1
 
 
 

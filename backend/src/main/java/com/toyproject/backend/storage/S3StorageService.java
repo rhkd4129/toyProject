@@ -54,7 +54,12 @@ public class S3StorageService implements StorageService{
                 // 업로드할 실제 파일 데이터 (바이트 스트림) , 파일 크기 (AWS가 얼마나 읽을지 알아야 함)
         );
         String presignedUrl = generatePresignedUrl(filePath);
-        return new PdfRedisRequest(taskId,presignedUrl, filePath,pdfType); // presignedUrl이 path 역할
+        return new PdfRedisRequest(taskId,presignedUrl,pdfType); // presignedUrl이 path 역할
+    }
+
+    @Override
+    public void deleteFile(String filePath) {
+
     }
 
     @Override

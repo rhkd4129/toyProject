@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -23,18 +24,18 @@ import java.nio.file.Paths;
 @Slf4j
 public class LocalStorageService implements StorageService{
 
+
     @Value("${spring.servlet.multipart.location}")
     private  String uploadPathPattern;
 
 
     @Override
     public PdfRedisRequest uploadFile(String taskId, MultipartFile file,String pdfType) throws IOException {
-        String originalFilename = file.getOriginalFilename(); // "abc.pdf"
-        String fileName= FileUtils.buildFileName(taskId,originalFilename);
+        String fileName = file.getOriginalFilename(); // "abc.pdf"
         String filePath = Paths.get(uploadPathPattern, fileName).toString();
         log.info("파일업로드 => {}",filePath);
         FileUtils.uploadFile(fileName, file.getBytes(), uploadPathPattern);
-        return new PdfRedisRequest(taskId, filePath,originalFilename,pdfType);
+        return new PdfRedisRequest(taskId, filePath,pdfType);
     }
 
     @Override
@@ -49,7 +50,16 @@ public class LocalStorageService implements StorageService{
 
     }
 
+    @Override
+    public void deleteFile(String filePath) {
+        Path path = Paths.get(filePath);
 
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            throw new RuntimeException("파일 삭제에 실패했습니다: " + path.toAbsolutePath(), e);
+        }
+    }
 }
 //PhotoResultResponseDTO photoResultResponseDTO = photoService.selectPhoto(currentMember, num,kind);
 //String contentDisposition = "attachment; filename=\"" + photoResultResponseDTO.getEncodedFilename() + "\"";

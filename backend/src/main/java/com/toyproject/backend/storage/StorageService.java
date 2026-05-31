@@ -16,4 +16,6 @@ public interface StorageService {
     public PdfRedisRequest uploadFile(String taskId, MultipartFile file,String pdfType) throws IOException;
 
     public PdfResponseDTO downloadFile(String fileName)throws MalformedURLException;
+
+    public void deleteFile(String filePath);
 }
