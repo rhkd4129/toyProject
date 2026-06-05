@@ -6,7 +6,7 @@ import Posts from "@components/post/Posts.vue";
 
 <template>
 
-    <HelloWorld msg="테스트 중.. 성공?" />
+    <HelloWorld msg="테스트 중.. 성공? 두번쨰시도" />
 
 
   <Posts/>
