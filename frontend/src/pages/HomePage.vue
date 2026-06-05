@@ -6,7 +6,7 @@ import Posts from "@components/post/Posts.vue";
 
 <template>
 
-    <HelloWorld msg="Vite + Vue" />
+    <HelloWorld msg="테스트 중.. 성공?" />
 
 
   <Posts/>
