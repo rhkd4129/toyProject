@@ -25,7 +25,8 @@ spring:
   datasource:
     driver-class-name: oracle.jdbc.driver.OracleDriver
     # EC2 생성 후 내부 IP로 교체 필요
-    url: jdbc:oracle:thin:@EC2_INTERNAL_IP:1521/xe
+#    url: jdbc:oracle:thin:@EC2_INTERNAL_IP:1521/xe
+    url: jdbc:oracle:thin:@localhost:1521/xe
     username: MYPROJECT
     password: tiger2
 

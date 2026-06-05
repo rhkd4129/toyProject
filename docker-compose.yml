@@ -1,4 +1,11 @@
 services:
+  oracle-db:
+    image: gvenzl/oracle-xe:11
+    container_name: oracle-db
+    environment:
+      ORACLE_PASSWORD: tiger
+    ports:
+      - "1521:1521"
 
   frontend:
     build: ./frontend
@@ -6,8 +13,6 @@ services:
       - "80:80"
     depends_on:
       - backend
-    networks:
-      - app-network
 
   backend:
     build: ./backend
@@ -16,11 +21,10 @@ services:
     volumes:
       - pdf_data:/app/pdf
     extra_hosts:
-      - "host.docker.internal:host-gateway"   # Oracle(EC2 호스트) 접근용
+      - "host.docker.internal:host-gateway"
     depends_on:
       - redis
-    networks:
-      - app-network
+      - oracle-db
 
   apiserver:
     build: ./apiserver
@@ -28,11 +32,9 @@ services:
       - "8084"
     volumes:
       - pdf_data:/app/pdf
-      - easyocr_cache:/root/.EasyOCR   # 모델 재다운로드 방지
+      - easyocr_cache:/root/.EasyOCR
     depends_on:
       - redis
-    networks:
-      - app-network
 
   redis:
     image: redis:7-alpine
@@ -40,14 +42,8 @@ services:
       - "6379"
     volumes:
       - redis_data:/data
-    networks:
-      - app-network
 
 volumes:
-  pdf_data:      # backend ↔ apiserver 파일 공유
-  easyocr_cache: # EasyOCR 언어 모델 캐시
-  redis_data:    # Redis 데이터 영속성
-
-networks:
-  app-network:
-    driver: bridge
+  pdf_data:
+  easyocr_cache:
+  redis_data:
