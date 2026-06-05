@@ -27,26 +27,46 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
-      # ↓ 여기서부터 추가
-      - name: AWS 자격증명 설정
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: dist 폴더를 EC2로 전송
+        uses: appleboy/scp-action@v0.1.7
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          host: 43.200.234.146
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          source: ./frontend/dist/
+          target: /home/ec2-user/dist-deploy
+          strip_components: 2
 
-      - name: S3에 빌드 파일 업로드
-        working-directory: ./frontend
-        run: |
-          aws s3 sync ./dist s3://${{ secrets.S3_BUCKET_NAME }} \
-            --delete  
+      - name: EC2 nginx 경로로 파일 이동
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 43.200.234.146
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            sudo rm -rf /usr/share/nginx/html/*
+            sudo cp -r /home/ec2-user/dist-deploy/* /usr/share/nginx/html/
+            rm -rf /home/ec2-user/dist-deploy
 
-      - name: CloudFront 캐시 무효화
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
-          
+
+#      - name: AWS 자격증명 설정
+#        uses: aws-actions/configure-aws-credentials@v2
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws-region: ${{ secrets.AWS_REGION }}
+#
+#      - name: S3에 빌드 파일 업로드
+#        working-directory: ./frontend
+#        run: |
+#          aws s3 sync ./dist s3://${{ secrets.S3_BUCKET_NAME }} \
+#            --delete
+#
+#      - name: CloudFront 캐시 무효화
+#        run: |
+#          aws cloudfront create-invalidation \
+#            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+#            --paths "/*"
 
       # run: 실제 쉘 명령어 실행 (터미널에서 치는 것과 동일)
       # uses: 이미 만들어진 GitHub Action 사용
