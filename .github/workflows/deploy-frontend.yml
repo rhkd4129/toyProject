@@ -45,7 +45,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             sudo rm -rf /usr/share/nginx/html/*
-            sudo cp -r /home/ec2-user/dist-deploy/* /usr/share/nginx/html/
+            sudo cp -r /home/ec2-user/dist-deploy/dist/* /usr/share/nginx/html/
             rm -rf /home/ec2-user/dist-deploy
 
 
