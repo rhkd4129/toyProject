@@ -11,13 +11,13 @@ services:
       - "8085:8085"
     restart: always
     depends_on:
-      - oracle
-      - redis
+      - oracle-db
+      - redis-db
     environment:
       SPRING_DATASOURCE_URL: jdbc:oracle:thin:@oracle-db:1521/xe
       SPRING_DATASOURCE_USERNAME: MYPROJECT
       SPRING_DATASOURCE_PASSWORD: tiger2
-      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_HOST: redis-db
       SPRING_REDIS_PORT: 6379
 
   oracle-db:
@@ -30,7 +30,7 @@ services:
     volumes:
       - oracle_data:/opt/oracle/oradata
 
-  redis:
+  redis-db:
     image: redis:7-alpine
     ports:
       - "6379:6379"
