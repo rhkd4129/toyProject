@@ -19,6 +19,7 @@ import java.util.List;
 public class PostController {
 
     private final PostService postService;
+    //되나?
 
     // 목록 조회
     @GetMapping("/list")
