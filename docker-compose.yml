@@ -7,7 +7,7 @@ services:
 #    ports:
 #      - "1521:1521"
   frontend:
-    image: dlrhkdgus/frontend:latest
+    image: rhkd4129/frontend:latest
     ports:
       - "80:80"
 
