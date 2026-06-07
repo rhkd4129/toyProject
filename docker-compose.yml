@@ -8,19 +8,19 @@ services:
   backend:
     image: rhkd4129/backend:latest
     ports:
-      - "8080:8080"
+      - "8085:8085"
     restart: always
     depends_on:
       - oracle
       - redis
     environment:
-      SPRING_DATASOURCE_URL: jdbc:oracle:thin:@oracle:1521/XE
+      SPRING_DATASOURCE_URL: jdbc:oracle:thin:@oracle-db:1521/xe
       SPRING_DATASOURCE_USERNAME: MYPROJECT
       SPRING_DATASOURCE_PASSWORD: tiger2
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
 
-  oracle:
+  oracle-db:
     image: gvenzl/oracle-xe:11
     ports:
       - "1521:1521"
