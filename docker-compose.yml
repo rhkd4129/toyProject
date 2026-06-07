@@ -1,46 +1,40 @@
 services:
-#  oracle-db:
-#    image: gvenzl/oracle-xe:11
-#    container_name: oracle-db
-#    environment:
-#      ORACLE_PASSWORD: tiger
-#    ports:
-#      - "1521:1521"
   frontend:
     image: rhkd4129/frontend:latest
     ports:
       - "80:80"
+    restart: always
 
-#  backend:
-#    build: ./backend
-#    expose:
-#      - "8085"
-#    volumes:
-#      - pdf_data:/app/pdf
-#    extra_hosts:
-#      - "host.docker.internal:host-gateway"
-#    depends_on:
-#      - redis
-#      - oracle-db
+  backend:
+    image: rhkd4129/backend:latest
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      - oracle
+      - redis
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:oracle:thin:@oracle:1521/XE
+      SPRING_DATASOURCE_USERNAME: MYPROJECT
+      SPRING_DATASOURCE_PASSWORD: tiger2
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
 
-#  apiserver:
-#    build: ./apiserver
-#    expose:
-#      - "8084"
-#    volumes:
-#      - pdf_data:/app/pdf
-#      - easyocr_cache:/root/.EasyOCR
-#    depends_on:
-#      - redis
+  oracle:
+    image: gvenzl/oracle-xe:11
+    ports:
+      - "1521:1521"
+    restart: always
+    environment:
+      ORACLE_PASSWORD: oracle
+    volumes:
+      - oracle_data:/opt/oracle/oradata
 
-#  redis:
-#    image: redis:7-alpine
-#    expose:
-#      - "6379"
-#    volumes:
-#      - redis_data:/data
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: always
 
-#volumes:
-#  pdf_data:
-#  easyocr_cache:
-#  redis_data:
+volumes:
+  oracle_data:

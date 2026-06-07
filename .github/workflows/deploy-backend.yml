@@ -12,19 +12,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 코드 체크아웃
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Java 설치
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+      - name: Docker Hub 로그인
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Gradle 빌드 실행
-        working-directory: ./backend
+      - name: 이미지 빌드 & 푸시
         run: |
-          chmod +x gradlew
-          ./gradlew clean build -x test
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/backend:latest ./backend
+          docker push ${{ secrets.DOCKER_USERNAME }}/backend:latest
+
+      - name: EC2에서 pull & 실행
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 43.200.234.146
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            docker-compose pull
+            docker-compose up -d
+            
 
       # 빌드된 jar 파일을 EC2로 전송
 #      - name: EC2에 jar 파일 업로드
