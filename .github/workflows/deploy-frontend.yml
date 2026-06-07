@@ -14,10 +14,26 @@ jobs:
       - name: 코드 체크아웃
         uses: actions/checkout@v3
 
-      - name: Node 설치
-        uses: actions/setup-node@v3
+      - name: Docker Hub 로그인
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: 이미지 빌드 & 푸시
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/frontend:latest ./frontend
+          docker push ${{ secrets.DOCKER_USERNAME }}/frontend:latest
+
+      - name: EC2에서 pull & 실행
+        uses: appleboy/ssh-action@v1.0.3
+#        ssh -i EC2_KEY ec2-user@43.200.234.146 "docker-compose pull && docker-compose up -d"
         with:
-          node-version: '22'
+          host: 43.200.234.146
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            docker-compose pull
+            docker-compose up -d
+
+
 
       - name: 의존성 설치
         working-directory: ./frontend
@@ -26,27 +42,26 @@ jobs:
       - name: 빌드 실행
         working-directory: ./frontend
         run: npm run build
-
-      - name: dist 폴더를 EC2로 전송
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: 43.200.234.146
-          username: ec2-user
-          key: ${{ secrets.EC2_KEY }}
-          source: ./frontend/dist/
-          target: /home/ec2-user/dist-deploy
-          strip_components: 2
-
-      - name: EC2 nginx 경로로 파일 이동
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 43.200.234.146
-          username: ec2-user
-          key: ${{ secrets.EC2_KEY }}
-          script: |
-            sudo rm -rf /usr/share/nginx/html/*
-            sudo cp -r /home/ec2-user/dist-deploy/dist/* /usr/share/nginx/html/
-            rm -rf /home/ec2-user/dist-deploy
+#      - name: dist 폴더를 EC2로 전송
+#        uses: appleboy/scp-action@v0.1.7
+#        with:
+#          host: 43.200.234.146
+#          username: ec2-user
+#          key: ${{ secrets.EC2_KEY }}
+#          source: ./frontend/dist/
+#          target: /home/ec2-user/dist-deploy
+#          strip_components: 2
+#
+#      - name: EC2 nginx 경로로 파일 이동
+#        uses: appleboy/ssh-action@v1.0.3
+#        with:
+#          host: 43.200.234.146
+#          username: ec2-user
+#          key: ${{ secrets.EC2_KEY }}
+#          script: |
+#            sudo rm -rf /usr/share/nginx/html/*
+#            sudo cp -r /home/ec2-user/dist-deploy/dist/* /usr/share/nginx/html/
+#            rm -rf /home/ec2-user/dist-deploy
 
 
 #      - name: AWS 자격증명 설정

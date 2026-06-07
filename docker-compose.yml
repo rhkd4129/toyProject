@@ -1,49 +1,46 @@
 services:
-  oracle-db:
-    image: gvenzl/oracle-xe:11
-    container_name: oracle-db
-    environment:
-      ORACLE_PASSWORD: tiger
-    ports:
-      - "1521:1521"
-
+#  oracle-db:
+#    image: gvenzl/oracle-xe:11
+#    container_name: oracle-db
+#    environment:
+#      ORACLE_PASSWORD: tiger
+#    ports:
+#      - "1521:1521"
   frontend:
-    build: ./frontend
+    image: dlrhkdgus/frontend:latest
     ports:
       - "80:80"
-    depends_on:
-      - backend
 
-  backend:
-    build: ./backend
-    expose:
-      - "8085"
-    volumes:
-      - pdf_data:/app/pdf
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    depends_on:
-      - redis
-      - oracle-db
+#  backend:
+#    build: ./backend
+#    expose:
+#      - "8085"
+#    volumes:
+#      - pdf_data:/app/pdf
+#    extra_hosts:
+#      - "host.docker.internal:host-gateway"
+#    depends_on:
+#      - redis
+#      - oracle-db
 
-  apiserver:
-    build: ./apiserver
-    expose:
-      - "8084"
-    volumes:
-      - pdf_data:/app/pdf
-      - easyocr_cache:/root/.EasyOCR
-    depends_on:
-      - redis
+#  apiserver:
+#    build: ./apiserver
+#    expose:
+#      - "8084"
+#    volumes:
+#      - pdf_data:/app/pdf
+#      - easyocr_cache:/root/.EasyOCR
+#    depends_on:
+#      - redis
 
-  redis:
-    image: redis:7-alpine
-    expose:
-      - "6379"
-    volumes:
-      - redis_data:/data
+#  redis:
+#    image: redis:7-alpine
+#    expose:
+#      - "6379"
+#    volumes:
+#      - redis_data:/data
 
-volumes:
-  pdf_data:
-  easyocr_cache:
-  redis_data:
+#volumes:
+#  pdf_data:
+#  easyocr_cache:
+#  redis_data:
