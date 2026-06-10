@@ -29,7 +29,7 @@ public class S3StorageService implements StorageService{
     private final S3Client s3Client;
 
     private final S3Presigner s3Presigner;
-    private final PdfService pdfService;
+//    private final PdfService pdfService;
 
     @Value("${cloud.aws.s3.bucket}")
     private  String bucket;
