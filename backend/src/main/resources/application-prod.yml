@@ -48,8 +48,8 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
-    #      ddl-auto: create
+      #ddl-auto: none
+      ddl-auto: create
     show-sql: false
     properties:
       hibernate:
@@ -61,9 +61,9 @@ spring:
         type: trace
 cloud:
   aws:
-#    credentials:
-#      access-key: hi
-#      secret-key: hi
+    credentials:
+      access-key: ${CLOUD_AWS_CREDENTIALS_ACCESS_KEY}
+      secret-key: ${CLOUD_AWS_CREDENTIALS_SECRET_KEY}
     region:
       static: ap-northeast-2   # 서울 리전
     s3:
