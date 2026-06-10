@@ -29,8 +29,8 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           script: |
-            export CLOUD_AWS_CREDENTIALS_ACCESS_KEY="${{ secrets.AWS_ACCESS_KEY_ID }}"
-            export CLOUD_AWS_CREDENTIALS_SECRET_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+            echo "CLOUD_AWS_CREDENTIALS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY_ID }}" > .env
+            echo "CLOUD_AWS_CREDENTIALS_SECRET_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
             docker-compose pull
             docker-compose up -d
             
