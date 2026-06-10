@@ -34,7 +34,7 @@ public class S3StorageService implements StorageService{
     @Value("${cloud.aws.s3.bucket}")
     private  String bucket;
 
-    @Value("${cloud.aws.s3.prefix}")
+    @Value("${cloud.aws.s3.key-prefix}")
     private  String uploadPathPattern;
 
 
