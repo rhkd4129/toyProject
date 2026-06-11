@@ -1,0 +1,33 @@
+name: Deploy Compose
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docker-compose.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: docker-compose.yml EC2 전송
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 43.200.234.146
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          source: docker-compose.yml
+          target: /home/ec2-user/
+
+      - name: EC2 컨테이너 재시작
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 43.200.234.146
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            docker compose up -d
