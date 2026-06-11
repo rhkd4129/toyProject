@@ -16,7 +16,7 @@ services:
       oracle-db:
         condition: service_healthy
       redis-db:
-        condition: service_started
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:oracle:thin:@oracle-db:1521/xe
       SPRING_DATASOURCE_USERNAME: MYPROJECT
@@ -25,6 +25,19 @@ services:
       SPRING_REDIS_PORT: 6379
       CLOUD_AWS_CREDENTIALS_ACCESS_KEY: ${CLOUD_AWS_CREDENTIALS_ACCESS_KEY}
       CLOUD_AWS_CREDENTIALS_SECRET_KEY: ${CLOUD_AWS_CREDENTIALS_SECRET_KEY}
+
+
+  api-server:
+    ports:
+      - "8084:8084"
+    container_name: api-server
+    image: rhkd4129/api-server:latest
+    depends_on:
+      redis-db:
+        condition: service_healthy
+    restart: always
+    environment:
+      REDIS_HOST: redis-db
 
   oracle-db:
     container_name: oracle-db
@@ -49,6 +62,11 @@ services:
     ports:
       - "6379:6379"
     restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 volumes:
   oracle_data:
