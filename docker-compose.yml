@@ -11,8 +11,10 @@ services:
       - "8085:8085"
     restart: always
     depends_on:
-      - oracle-db
-      - redis-db
+      oracle-db:
+        condition: service_healthy
+      redis-db:
+        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: jdbc:oracle:thin:@oracle-db:1521/xe
       SPRING_DATASOURCE_USERNAME: MYPROJECT
@@ -31,6 +33,12 @@ services:
       ORACLE_PASSWORD: oracle
     volumes:
       - oracle_data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'SELECT 1 FROM DUAL;' | sqlplus -s system/oracle@localhost:1521/xe"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
 
   redis-db:
     image: redis:7-alpine

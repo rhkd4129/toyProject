@@ -33,15 +33,14 @@ jobs:
             docker-compose pull
             docker-compose up -d
 
-
-
-      - name: 의존성 설치
-        working-directory: ./frontend
-        run: npm install
-
-      - name: 빌드 실행
-        working-directory: ./frontend
-        run: npm run build
+#
+#      - name: 의존성 설치
+#        working-directory: ./frontend
+#        run: npm install
+#
+#      - name: 빌드 실행
+#        working-directory: ./frontend
+#        run: npm run build
 #      - name: dist 폴더를 EC2로 전송
 #        uses: appleboy/scp-action@v0.1.7
 #        with:
