@@ -1,10 +1,7 @@
 
-
 5/28
 - Spring cleanup API (DELETE /api/pdf/cleanup/{taskId})
 - Vue 페이지 이탈 시 cleanup 호출 (beforeRouteLeave)
-5/29
-    python pdfType분기하기
 
 1. pdfType 테스트 완료
 2. pdf db 테스트 완료
@@ -16,4 +13,4 @@
 직접 채워야하는것
   1. application-prod.yml의 EC2_INTERNAL_IP → 실제 EC2 내부 IP 교체
   2. frontend/.env.production의 URL → EC2 Elastic IP 또는 도메인 입력
-  3. EC2에 docker-compose up --build -d 실행
+
