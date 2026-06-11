@@ -17,7 +17,7 @@ jobs:
       - name: docker-compose.yml EC2 전송
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: 43.200.234.146
+          host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           source: docker-compose.yml
@@ -26,7 +26,8 @@ jobs:
       - name: EC2 컨테이너 재시작
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: 43.200.234.146
+#          host: 43.200.234.146
+          host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           script: |

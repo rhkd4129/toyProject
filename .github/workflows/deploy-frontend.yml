@@ -26,12 +26,15 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
 #        ssh -i EC2_KEY ec2-user@43.200.234.146 "docker-compose pull && docker-compose up -d"
         with:
-          host: 43.200.234.146
+#          host: 43.200.234.146
+          host: ${{ secrets.EC2_HOST }}
+
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           script: |
-            docker-compose pull
-            docker-compose up -d
+            docker compose pull
+            docker compose up -d
+            
 
 #
 #      - name: 의존성 설치
