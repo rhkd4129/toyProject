@@ -48,6 +48,6 @@ public class RedisService {
                     redisStreamProperties.getPdfEvents());
             throw new RuntimeException("Redis Stream 메시지 추가 실패");
         }
-        log.info("Message added with ID: {}", recordId.getValue());
+        log.info("redis message id: {}", recordId.getValue());
     }
 }

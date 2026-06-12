@@ -11,8 +11,9 @@ const pdfTypeOptions = [
   { title: "XLSX생성기", value: "XLSX" },
   { title: "초본분리기", value: "DIVIDE" },
 ]
+const metadataXlsxFile = ref(null);
 const pdfFile = ref(null);
-const pdfType = ref(null);
+const pdfType = ref("XLSX");
 const  resultFileName = computed(()=>store.state.pdfStore.pdfResultFileName)
 const pdfErrorMessage = computed(()=>store.getters["pdfStore/errorMessage"])
 const rules = reactive({
@@ -47,8 +48,18 @@ const submitForm = async ()=>{
   }catch (error){
     console.log(error)
   }
-
 }
+
+const metadataUpload = async ()=>{
+    try{
+      await store.dispatch('pdfStore/updateMetadata',metadataXlsxFile)
+
+
+    }catch(error){
+
+    }
+}
+
 const resetForm = () => {
   pdfFile.value = null;
   valid.value = false;
@@ -83,6 +94,11 @@ watch(pdfErrorMessage, async(newVal, oldVal)  => {
 })
 
 
+// watch(pdfType,(newVal,oldValue)=>{
+//   console.log(newVal);
+// })
+
+
 </script>
 
 <template>
@@ -93,11 +109,9 @@ watch(pdfErrorMessage, async(newVal, oldVal)  => {
         <v-form v-model="valid" @submit.prevent="submitForm">
             <v-select v-model="pdfType"
             :items="pdfTypeOptions"
-            :rules="[rules.required]"
+            :rules="[rules.required]" item-value="value"
             label="분류"
             class="mb-3"></v-select>
-
-
               <v-card class="pa-4">
                 <v-card-title class="text-h5 mb-4"></v-card-title>
                 <v-file-input
@@ -133,6 +147,42 @@ watch(pdfErrorMessage, async(newVal, oldVal)  => {
         </v-form>
     </v-card-text>
   </v-card>
+
+
+  <template v-if="pdfType==='XLSX'">
+      <v-card flat border max-width="800">
+          <v-card-title class="pa-4">사건부 업로드</v-card-title>
+          <v-card-text>
+<!--            v-model="valid"-->
+            <v-form  @submit.prevent="metadataUpload">
+                <v-file-input
+                    label="PDF 업로드"
+                    accept="application/pdf"
+                    prepend-icon="mdi-file-pdf-box"
+                    outlined
+                    dense
+                ></v-file-input>
+              </v-form>
+
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn
+                    color="primary"
+                    type="submit"
+                    :disabled="!valid"
+                >등록</v-btn>
+
+                <v-btn
+                    color="grey"
+                    text
+                    @click="resetForm"
+                >초기화</v-btn>
+              </v-card-actions>
+          </v-card-text>
+      </v-card>
+  </template>
+
+
 </template>
 
 <style scoped>

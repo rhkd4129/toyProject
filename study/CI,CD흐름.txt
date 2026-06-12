@@ -1,0 +1,23 @@
+
+
+
+
+1. 개발자가 backend/** 코드 수정 후 main 브랜치에 push
+        ↓
+2. GitHub Actions 트리거
+
+        [CI]
+3. ./backend/Dockerfile로 이미지 빌드
+        ↓
+4. Docker Hub (rhkd4129/backend:latest)에 push
+        ↓
+        [CD]
+5. EC2에 SSH 접속
+        ↓
+6. EC2에서 docker-compose pull
+   → Docker Hub에서 새 이미지 다운
+        ↓
+7. docker-compose up -d
+   → compose 설정(포트, 환경변수, DB연결) 적용해서 컨테이너 실행
+
+

@@ -1,16 +1,19 @@
-
 5/28
 - Spring cleanup API (DELETE /api/pdf/cleanup/{taskId})
-- Vue 페이지 이탈 시 cleanup 호출 (beforeRouteLeave)
+- Vue 페이지 이탈 시 cleanup 호출 (beforeRouteLeave)\
 
-1. pdfType 테스트 완료
-2. pdf db 테스트 완료
+6/12
+ - pdf제출하고 사용자에게 처리 중 이라고 메시지 출력?
+ - java에서 fileupload시 반환값이 redis로 고정되어잇음...
+    => fileupload에서 fileptah만 받는거로 s3와 local파일 업로드방식이 상이 햇음 s3 uuid_filename형식으로 그래서 통일
+
+
+
+
+
 /plugin marketplace add forrestchang/andrej-karpathy-skills
 /plugin install andrej-karpathy-skills@karpathy-skills
  /reload-plugins
  /ka
 
-직접 채워야하는것
-  1. application-prod.yml의 EC2_INTERNAL_IP → 실제 EC2 내부 IP 교체
-  2. frontend/.env.production의 URL → EC2 Elastic IP 또는 도메인 입력
 

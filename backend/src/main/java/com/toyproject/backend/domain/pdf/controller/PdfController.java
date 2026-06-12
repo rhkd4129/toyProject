@@ -56,6 +56,15 @@ public class PdfController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+    @PostMapping("/update/metadata")
+    public ResponseEntity<?> updateMetadata(@RequestParam("metadata")MultipartFile metadata){
+        Result result = new Result();
+        result.setMessage("업로드완료");
+//        회사 메시지 큐?
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+
     @GetMapping("/download/{fileName}")
     public ResponseEntity<?> downloadPdf(@PathVariable String fileName) throws MalformedURLException {
         log.info(" ============= downloadPdf 진입 ================");

@@ -6,6 +6,7 @@ import com.toyproject.backend.domain.pdf.service.PdfService;
 import com.toyproject.backend.utils.FileUploadResult;
 import com.toyproject.backend.utils.FileUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.time.Duration;
 
 @Service
 @Profile("prod")
+@Slf4j
 @RequiredArgsConstructor
 public class S3StorageService implements StorageService{
 
@@ -39,10 +41,10 @@ public class S3StorageService implements StorageService{
 
 
     @Override
-    public PdfRedisRequest uploadFile(String taskId, MultipartFile file,String pdfType) throws IOException {
+    public String uploadFile(MultipartFile file) throws IOException {
         String originalFilename = file.getOriginalFilename(); // "abc.pdf"
-        String fileName = FileUtils.buildFileName(taskId,originalFilename);
-        String filePath = uploadPathPattern+fileName;
+//        String fileName = FileUtils.buildFileName(taskId,originalFilename);
+        String filePath = uploadPathPattern+originalFilename;
 //        String key = uploadPathPattern + FileUtils.generateKey(originalFilename);
         s3Client.putObject(
                 PutObjectRequest.builder()
@@ -53,8 +55,11 @@ public class S3StorageService implements StorageService{
                 RequestBody.fromInputStream(file.getInputStream(), file.getSize())
                 // 업로드할 실제 파일 데이터 (바이트 스트림) , 파일 크기 (AWS가 얼마나 읽을지 알아야 함)
         );
+
         String presignedUrl = generatePresignedUrl(filePath);
-        return new PdfRedisRequest(taskId,presignedUrl,pdfType); // presignedUrl이 path 역할
+        log.info("파일업로드 => {}",filePath);
+        return presignedUrl;
+//        return new PdfRedisRequest(taskId,presignedUrl,pdfType); // presignedUrl이 path 역할
     }
 
     @Override
