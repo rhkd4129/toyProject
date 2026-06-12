@@ -1,5 +1,5 @@
-      온프레미스 → IaaS → PaaS → CaaS → 서버리스
-      관리 복잡                        클라우드 위임
+온프레미스 → IaaS → PaaS → CaaS → 서버리스
+관리 복잡                        클라우드 위임
 
 
 온프레미스 (On-Premises)

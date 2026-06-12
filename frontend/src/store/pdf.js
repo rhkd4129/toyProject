@@ -1,4 +1,4 @@
-import {conEmitter, createPdf, createPdfTaskId, downloadPdf} from "@api";
+import {conEmitter, createPdf, createPdfTaskId, downloadPdf, updateMetadata} from "@api";
 import {standardEasing} from "vuetify/lib/util/index.d.ts";
 
 
@@ -30,8 +30,6 @@ const pdfStore={
         async getPdf({state,dispatch},value){
             const response = await downloadPdf(value)
             console.log(response)
-
-
             const filenameMatch = String(response.headers['content-disposition'] ?? '') && String(response.headers['content-disposition'] ?? '').match(/filename="(.+)"/);
             const fileName = filenameMatch ? decodeURIComponent(filenameMatch[1]) : 'downloaded_file';
             const blobUrl = URL.createObjectURL(response.data);
@@ -45,10 +43,15 @@ const pdfStore={
 
         async getPdfTaskId({commit}){
             const result = await createPdfTaskId();
-
-            // result.data.pdfTaskId
             commit("setPdfTaskId", result.data)
         },
+        async updateMetadata({state,commit},value){
+            const formData = new FormData();
+            formData.append("metadata", value); // JSON.stringify 제
+            const result = await updateMetadata(value)
+            console.log(result)
+        },
+
 
         async addPdf({state,commit},value) {
             const formData = new FormData();

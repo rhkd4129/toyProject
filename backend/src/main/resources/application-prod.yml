@@ -61,9 +61,10 @@ spring:
         type: trace
 cloud:
   aws:
-    credentials:
-      access-key: ${CLOUD_AWS_CREDENTIALS_ACCESS_KEY}
-      secret-key: ${CLOUD_AWS_CREDENTIALS_SECRET_KEY}
+    # EC2 IAM Role 적용으로 액세스 키 불필요 → 제거
+    # credentials:
+    #   access-key: ${CLOUD_AWS_CREDENTIALS_ACCESS_KEY}
+    #   secret-key: ${CLOUD_AWS_CREDENTIALS_SECRET_KEY}
     region:
       static: ap-northeast-2   # 서울 리전
     s3:

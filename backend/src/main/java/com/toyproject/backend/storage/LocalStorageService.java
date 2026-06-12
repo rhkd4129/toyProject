@@ -9,7 +9,10 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
@@ -30,12 +33,20 @@ public class LocalStorageService implements StorageService{
 
 
     @Override
-    public PdfRedisRequest uploadFile(String taskId, MultipartFile file,String pdfType) throws IOException {
+    public String uploadFile(MultipartFile file) throws IOException {
         String fileName = file.getOriginalFilename(); // "abc.pdf"
         String filePath = Paths.get(uploadPathPattern, fileName).toString();
+
+        File fileDirectory = new File(uploadPathPattern);
+        if (!fileDirectory.exists()) {
+            fileDirectory.mkdirs();
+        }
+        File target = new File(uploadPathPattern, fileName);
+        FileCopyUtils.copy(file.getBytes(), target);
+
         log.info("파일업로드 => {}",filePath);
-        FileUtils.uploadFile(fileName, file.getBytes(), uploadPathPattern);
-        return new PdfRedisRequest(taskId, filePath,pdfType);
+        return filePath;
+//        return new PdfRedisRequest(taskId, filePath,pdfType);
     }
 
     @Override

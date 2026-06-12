@@ -19,14 +19,14 @@ public class FileUtils {
 //        return transformLevel.getTransformLevel()+"."+fileType.getExtension();
 //    }
 
-    public static void uploadFile(String fileName, byte[] fileData, String path) throws IOException {
-        File fileDirectory = new File(path);
-        if (!fileDirectory.exists()) {
-            fileDirectory.mkdirs();
-        }
-        File target = new File(path, fileName);
-        FileCopyUtils.copy(fileData, target);
-    }
+//    public static void uploadFile(String fileName, byte[] fileData, String path) throws IOException {
+//        File fileDirectory = new File(path);
+//        if (!fileDirectory.exists()) {
+//            fileDirectory.mkdirs();
+//        }
+//        File target = new File(path, fileName);
+//        FileCopyUtils.copy(fileData, target);
+//    }
 
 //    public static String buildFileName(String taskId, String originalFilename) {
 //        int dotIndex = originalFilename.lastIndexOf(".");
