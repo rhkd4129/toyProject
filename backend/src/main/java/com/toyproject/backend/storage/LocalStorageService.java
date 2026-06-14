@@ -23,7 +23,9 @@ import java.nio.file.Paths;
 
 
 @Service
-@Profile("local")
+@Profile("local & !local-s3")
+//@Profile("local")
+
 @Slf4j
 public class LocalStorageService implements StorageService{
 

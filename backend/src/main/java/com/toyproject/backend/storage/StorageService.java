@@ -18,4 +18,8 @@ public interface StorageService {
     public PdfResponseDTO downloadFile(String fileName)throws MalformedURLException;
 
     public void deleteFile(String filePath);
+
+    // 2026-06-13 S3 presigned URL 생성 메서드 (local에서는 빈 문자열 반환)
+//    default String generatePresignedDownloadUrl(String key) { return ""; }
+//    default String[] generateResultPresignedUrls(String taskId) { return new String[]{"", ""}; }
 }

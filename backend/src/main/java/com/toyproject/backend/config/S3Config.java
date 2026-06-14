@@ -9,7 +9,8 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 @Configuration
-@Profile("prod")
+@Profile({"prod", "local-s3"})
+//@Profile("prod")
 public class S3Config {
 
     // EC2 IAM Role(AmazonS3FullAccess) 연결 후 액세스 키 불필요 → 아래 주석 코드는 IAM Role 적용 전 방식

@@ -76,3 +76,24 @@ public class PdfService {
     }
 
 }
+//@Transactional
+//public PdfRedisRequest createPdf(MultipartFile file,String pdfTaskId,String pdfType) {
+//    try {
+//        //TODO 리팩토링? storageService.uploadFile
+//
+//        // 2026-06-13 S3 presigned URL 포함하도록 수정
+//        // PdfRedisRequest pdfRedisRequest = PdfRedisRequest.to(pdfTaskId,filePath,pdfType);
+//        String filePath = storageService.uploadFile(file);
+//        String presignedDownloadUrl = storageService.generatePresignedDownloadUrl(filePath);
+//        String[] resultUrls = storageService.generateResultPresignedUrls(pdfTaskId);
+//        PdfRedisRequest pdfRedisRequest = PdfRedisRequest.to(pdfTaskId, filePath, pdfType,
+//                presignedDownloadUrl, resultUrls[0], resultUrls[1]);
+//        Pdf pdf = Pdf.createPdf(pdfTaskId, PdfTypeEnum.valueOf(pdfType),file.getOriginalFilename());
+//        pdfRepository.createPdf(pdf);
+//        redisService.addStream(pdfRedisRequest);
+//        return pdfRedisRequest;
+//    } catch (IOException e) {
+//        log.error("PDF 파일 처리 중 오류 발생: {}", e.getMessage());
+//        throw new CommonException(ErrorCode.FILE_UPLOAD_FAILED);
+//    }
+//}

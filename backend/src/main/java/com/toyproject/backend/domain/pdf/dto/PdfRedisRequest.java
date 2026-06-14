@@ -21,7 +21,9 @@ public class PdfRedisRequest {
     private String taskId;
     private String pdfType;
     private String filePath;
-
+//    private String presignedDownloadUrl;
+//    private String presignedUploadUrl;
+//    private String resultDownloadUrl;
 
 
 }
