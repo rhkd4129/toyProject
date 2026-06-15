@@ -74,9 +74,6 @@ LocalStorageService.downloadFile()은 파일을 실제로 읽어서 Resource로 
 
 
 
-
-
-
 /plugin marketplace add forrestchang/andrej-karpathy-skills
 /plugin install andrej-karpathy-skills@karpathy-skills
  /reload-plugins

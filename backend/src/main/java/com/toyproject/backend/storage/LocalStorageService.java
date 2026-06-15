@@ -57,10 +57,11 @@ public class LocalStorageService implements StorageService{
         Resource resource = null;
         String filePath = Paths.get(uploadPathPattern, fileName).toString();
         Path path = Paths.get(filePath);
+
         resource= new UrlResource(path.toUri());
         encodedFilename = URLEncoder.encode(fileName, StandardCharsets.UTF_8);
+        log.info("파일다운로드=> {}",filePath);
         return PdfResponseDTO.of(fileName,filePath,resource,encodedFilename);
-
     }
 
     @Override

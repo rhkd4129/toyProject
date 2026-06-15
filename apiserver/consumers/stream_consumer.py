@@ -67,18 +67,18 @@ async  def process_message(fields: dict):
     #  'filePath': '"C:\\\\Server\\\\PDF\\\\f7ddd661-d266-4570-a53c-9505879480b5.pdf"',
     #  'originalFileName': '"test.pdf"'}
     print(f"process_message 진입: {fields}")
-    taskId = fields["taskId"].strip('"')
-    filePath = fields["filePath"].strip('"')
-    pdfType = fields['pdfType']
+    task_id = fields["taskId"].strip('"')
+    input_path = fields["inputPath"].strip('"')
+    pdf_type = fields['pdfType']
 
     
     try:
-        with Processer(filePath, taskId, reader=READER) as processer:
+        with Processer(input_path, task_id, reader=READER) as processer:
             metadata_list = processer.parse()
 
-        with XLSXProcessor(metadata_list,taskId) as xlsx_processor:
+        with XLSXProcessor(metadata_list,task_id) as xlsx_processor:
             xlsx_processor.find_number()
-            resultFilePath = xlsx_processor.create_xlsx()
+            output_path = xlsx_processor.create_xlsx()
             
 
         # 기존 코드 (하드코딩)
@@ -86,10 +86,10 @@ async  def process_message(fields: dict):
         
         # pydantic-settings 적용
         await r.xadd(redis_settings.stream_pdf_results, {
-            "taskId": taskId,
-            "resultPath": resultFilePath,
+            "taskId": task_id,
+            "outputPath": output_path, ## 완료된 파일 경로
             "status": "COMPLETED",
-            "filePath": filePath
+            "inputPath": input_path  ## 원본 경로
         
         })
 
@@ -100,8 +100,8 @@ async  def process_message(fields: dict):
         print(f"[ERROR] process_message 실패: {e}")
         traceback.print_exc()
         await r.xadd(redis_settings.stream_pdf_results, {
-            "taskId": taskId,
-            "filePath": filePath,
+            "taskId": task_id,
+            "filePath": input_path,
             "status": "FAILED",
             "errorMessage":e
         

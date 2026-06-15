@@ -24,33 +24,27 @@ public class PdfResultConsumer implements StreamListener<String, MapRecord<Strin
 
         @Override
         public void onMessage(MapRecord<String, String, String> message) {
-            log.info("--------- onMessage  ------");
-            log.info("redis results 스트림 도착 ");
             String taskId = message.getValue().get("taskId");
             String status    = message.getValue().get("status");
-            String filePath = message.getValue().get("filePath");
+            String inputPath = message.getValue().get("inputPath"); //원본파일경로
 
             log.info("{}",taskId);
             log.info("{}",status);
-            log.info("{}",filePath);
+            log.info("{}",inputPath);
 
             if ("COMPLETED".equals(status)) {
-                //완료된 파일의 경로 + 이름
-                String resultPath    = message.getValue().get("resultPath");
+                String outputPath    = message.getValue().get("outputPath"); //완료된 파일의 경로 + 이름
                 pdfService.completePdf(taskId);
-                sseEmitterService.sendEvent(taskId, resultPath,status);
-
+                sseEmitterService.sendEvent(taskId, outputPath,status);
                 // 원본파일 삭제
-                storageService.deleteFile(filePath);
-
-
+                storageService.deleteFile(inputPath);
 
             } else if("FAILED".equals(status)) {
                 String errorMessage    = message.getValue().get("errorMessage");
                 log.info("{}",errorMessage);
                 pdfService.failPdf(taskId);
                 sseEmitterService.sendErrorMessage(taskId,status,errorMessage);
-                storageService.deleteFile(filePath);
+                storageService.deleteFile(inputPath);
                 // 재시도?
                 // Vue에 실패 이벤트 전송
             }

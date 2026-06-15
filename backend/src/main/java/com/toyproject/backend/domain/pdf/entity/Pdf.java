@@ -61,5 +61,10 @@ public class Pdf extends BaseEntity {
         this.status = PdfStatus.FAILED;
         this.completedAt = LocalDateTime.now();
     }
+    public void fail_002() {
+        this.status = PdfStatus.FAILED_002;
+        this.completedAt = LocalDateTime.now();
+    }
+
 
 }
