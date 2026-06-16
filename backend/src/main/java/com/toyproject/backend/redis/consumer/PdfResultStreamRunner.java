@@ -1,9 +1,6 @@
-package com.toyproject.backend.redis.subscriber;
-
-// 컨테이너에 리스너 등록 + 시작
+package com.toyproject.backend.redis.consumer;
 
 import com.toyproject.backend.config.properties.RedisStreamProperties;
-import com.toyproject.backend.redis.consumer.PdfResultConsumer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -22,10 +19,9 @@ public class PdfResultStreamRunner implements ApplicationRunner {
     private final RedisStreamProperties redisStreamProperties;
 
     @Override
-    public void run(ApplicationArguments args) {
-        container.receive(StreamOffset.create(redisStreamProperties.getPdfResults(), ReadOffset.latest()), pdfResultConsumer);
-
-        container.start(); // 🚀 폴링 시작
-        System.out.println("🎧 구독 시작");
+        public void run(ApplicationArguments args) {
+            container.receive(StreamOffset.create(redisStreamProperties.getPdfResults(), ReadOffset.latest()), pdfResultConsumer);
+            container.start();
+            System.out.println("구독 시작");
     }
 }

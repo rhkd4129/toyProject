@@ -1,6 +1,6 @@
 package com.toyproject.backend.domain.post.service;
 
-import com.toyproject.backend.domain.post.Enum.PostTypeEnum;
+import com.toyproject.backend.domain.post.enums.PostTypeEnum;
 import com.toyproject.backend.domain.post.dto.PostRequestDto;
 import com.toyproject.backend.domain.post.dto.PostResponseDto;
 import com.toyproject.backend.domain.post.entity.Post;

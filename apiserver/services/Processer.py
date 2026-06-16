@@ -133,7 +133,7 @@ class Processer:
     # def extract_and_save(self)      # 추출하고 저장
     # def parse_to_json(self)         # 파싱해서 json으로
     # def save_as_json(self)          # json으로 저장
-    def parse(self) -> None:
+    async def parse(self) -> None:
 
         print(f"총 {self.total_pages}페이지 감지됨\n")
 
@@ -142,9 +142,22 @@ class Processer:
         current_pages: list[int] = []
         current_amount: str | None = None  # 타채 금액 저장용
         i = 0
+        from consumers.stream_consumer import r
+        from core.config import redis_settings
 
         while i < self.total_pages:
             print(f"{i + 1}페이지 OCR 읽는 중...")
+
+            redis_payload = {
+                "taskId": self.key,
+                "status": "PROCESSING",
+                "totalPages":self.total_pages,
+                "currentPage":i+1
+            }
+
+            await r.xadd(redis_settings.stream_pdf_results,redis_payload)
+ 
+
             results = self._ocr_page(i)  # 전체 페이지 (쪽번호/이름/사건번호 추출용)
             current, total = self._extract_page_number(results)            
             if current == 1:

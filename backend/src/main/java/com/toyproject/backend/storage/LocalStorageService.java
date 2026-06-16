@@ -1,7 +1,5 @@
 package com.toyproject.backend.storage;
-import com.toyproject.backend.domain.pdf.dto.PdfRedisRequest;
 import com.toyproject.backend.domain.pdf.dto.PdfResponseDTO;
-import com.toyproject.backend.utils.FileUploadResult;
 import com.toyproject.backend.utils.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

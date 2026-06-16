@@ -1,4 +1,4 @@
-package com.toyproject.backend.Emitter;
+package com.toyproject.backend.emitter;
 
 import com.toyproject.backend.config.properties.SseProperties;
 import lombok.RequiredArgsConstructor;

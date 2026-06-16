@@ -1,5 +1,4 @@
-package com.toyproject.backend.utils;
-
+package com.toyproject.backend.common;
 
 import lombok.Getter;
 import lombok.Setter;

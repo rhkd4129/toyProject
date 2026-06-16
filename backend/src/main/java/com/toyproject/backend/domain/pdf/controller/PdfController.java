@@ -1,11 +1,11 @@
 package com.toyproject.backend.domain.pdf.controller;
 
 
-import com.toyproject.backend.Emitter.SseEmitterService;
+import com.toyproject.backend.emitter.SseEmitterService;
 import com.toyproject.backend.domain.pdf.dto.PdfRedisRequest;
 import com.toyproject.backend.domain.pdf.dto.PdfResponseDTO;
 import com.toyproject.backend.domain.pdf.service.PdfService;
-import com.toyproject.backend.utils.Result;
+import com.toyproject.backend.common.Result;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;

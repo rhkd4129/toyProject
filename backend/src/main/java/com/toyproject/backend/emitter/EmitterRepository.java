@@ -1,4 +1,4 @@
-package com.toyproject.backend.Emitter;
+package com.toyproject.backend.emitter;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

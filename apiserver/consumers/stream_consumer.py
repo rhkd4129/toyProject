@@ -89,7 +89,7 @@ async  def process_message(fields: dict):
 
     try:
         with Processer(local_pdf_path, task_id, reader=READER) as processer:
-            metadata_list = processer.parse()
+             metadata_list = await processer.parse()
 
         with XLSXProcessor(metadata_list,task_id) as xlsx_processor:
             xlsx_processor.find_number()

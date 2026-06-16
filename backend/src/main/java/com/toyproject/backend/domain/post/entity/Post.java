@@ -1,6 +1,6 @@
 package com.toyproject.backend.domain.post.entity;
 import com.toyproject.backend.common.BaseEntity;
-import com.toyproject.backend.domain.post.Enum.PostTypeEnum;
+import com.toyproject.backend.domain.post.enums.PostTypeEnum;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

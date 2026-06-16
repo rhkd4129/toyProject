@@ -18,7 +18,7 @@ public class MethodLoggingAspect {
             execution(* com.toyproject.backend.domain..*.*(..)) ||
             execution(* com.toyproject.backend.storage..*.*(..)) ||
             execution(* com.toyproject.backend.redis..*.*(..)) ||
-            execution(* com.toyproject.backend.Emitter..*.*(..))
+            execution(* com.toyproject.backend.emitter..*.*(..))
             """)
     private void applicationLayer() {}
 

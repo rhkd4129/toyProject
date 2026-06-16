@@ -1,5 +1,5 @@
 package com.toyproject.backend.domain.pdf.service;
-import com.toyproject.backend.domain.pdf.Enum.PdfTypeEnum;
+import com.toyproject.backend.domain.pdf.enums.PdfTypeEnum;
 import com.toyproject.backend.domain.pdf.dto.PdfRedisRequest;
 import com.toyproject.backend.domain.pdf.dto.PdfResponseDTO;
 import com.toyproject.backend.domain.pdf.entity.Pdf;
@@ -7,7 +7,6 @@ import com.toyproject.backend.domain.pdf.event.PdfCreatedEvent;
 import com.toyproject.backend.domain.pdf.repository.PdfRepository;
 import com.toyproject.backend.error.CommonException;
 import com.toyproject.backend.error.ErrorCode;
-import com.toyproject.backend.redis.RedisService;
 import com.toyproject.backend.storage.StorageService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;

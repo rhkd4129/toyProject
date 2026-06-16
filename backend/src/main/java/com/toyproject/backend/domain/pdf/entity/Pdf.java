@@ -1,9 +1,9 @@
 package com.toyproject.backend.domain.pdf.entity;
 
 
-import com.toyproject.backend.domain.pdf.Enum.PdfStatus;
-import com.toyproject.backend.domain.pdf.Enum.PdfTypeEnum;
-import com.toyproject.backend.utils.BaseEntity;
+import com.toyproject.backend.domain.pdf.enums.PdfStatus;
+import com.toyproject.backend.domain.pdf.enums.PdfTypeEnum;
+import com.toyproject.backend.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 @Entity
 @Table(name="PDF")
-public class Pdf extends BaseEntity {
+public class Pdf extends BaseTimeEntity {
     @Id
     @SequenceGenerator(
             name = "PDF_SEQ",
