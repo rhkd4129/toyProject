@@ -39,6 +39,8 @@ services:
     restart: always
     environment:
       REDIS_HOST: redis-db
+    volumes:
+      - /home/ec2-user/pdf:/app/pdf
 
   oracle-db:
     container_name: oracle-db
