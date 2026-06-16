@@ -54,3 +54,18 @@ class PathSettings(BaseSettings):
     )
 
 path_settings = PathSettings()
+
+
+class S3Settings(BaseSettings):
+    enabled: bool = False
+    bucket: str = ""
+    region: str = "ap-northeast-2"
+    result_key_prefix: str = "xlsx/"
+
+    model_config = SettingsConfigDict(
+        env_prefix="S3_",
+        env_file=Path(__file__).parent.parent / f".env.{ENV}",
+        extra="ignore",
+    )
+
+s3_config = S3Settings()

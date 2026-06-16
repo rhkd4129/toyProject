@@ -12,7 +12,7 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8084)
     # uvicorn main:app --reload
 
-
+    ##$env:APP_ENV = "prod"; uvicorn main:app --host 0.0.0.0 --port 8084
 
 
     # process_message 진입:

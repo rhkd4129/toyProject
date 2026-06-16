@@ -13,9 +13,11 @@ import java.net.MalformedURLException;
 
 public interface StorageService {
 
-    public String uploadFile( MultipartFile file) throws IOException;
+    public String uploadFile(MultipartFile file) throws IOException;
 
-    public PdfResponseDTO downloadFile(String fileName)throws MalformedURLException;
+    public String uploadResultFile(String localFilePath);
+
+    public PdfResponseDTO downloadFile(String fileName) throws MalformedURLException;
 
     public void deleteFile(String filePath);
 

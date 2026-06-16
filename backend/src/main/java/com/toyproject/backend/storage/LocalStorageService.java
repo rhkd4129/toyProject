@@ -65,6 +65,11 @@ public class LocalStorageService implements StorageService{
     }
 
     @Override
+    public String uploadResultFile(String localFilePath) {
+        return Paths.get(localFilePath).getFileName().toString();
+    }
+
+    @Override
     public void deleteFile(String filePath) {
         Path path = Paths.get(filePath);
 

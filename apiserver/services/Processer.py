@@ -21,23 +21,25 @@ class Processer:
 
     def _load_file(self):
         parsed = urlparse(self.file_path)
-        
+        path_lower = parsed.path.lower()
+        filetype = "tif" if path_lower.endswith((".tif", ".tiff")) else "pdf"
+
         # HTTP/HTTPS URL인 경우
         if parsed.scheme in ("http", "https"):
-            print("== prod env ==")
+            print(f"== prod env ({filetype}) ==")
             with requests.get(self.file_path) as download:
                 if download.status_code != 200:
                     raise HTTPException(...)
-                self.doc = fitz.open(stream=download.content, filetype="pdf")
-        
+                self.doc = fitz.open(stream=download.content, filetype=filetype)
+
         # 로컬 경로인 경우
         else:
             print("== local env ==")
             if not os.path.exists(self.file_path):
                 raise FileNotFoundError(f"파일 없음: {self.file_path}")
-            self.doc = fitz.open(self.file_path)  # fitz는 로컬 경로 직접 지원
+            self.doc = fitz.open(self.file_path)  # fitz는 확장자로 자동 감지
         self.total_pages = len(self.doc)
-        print("파일 로드 완료...")
+        print(f"파일 로드 완료... {self.file_path}")
 
 
     def _extract_page_number(self, results: list) -> tuple[int | None, int | None]:
@@ -216,7 +218,7 @@ class Processer:
             return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        self.doc.close()
         # upload = requests.put(
         #     self.file_path,
         #     data=download.content,

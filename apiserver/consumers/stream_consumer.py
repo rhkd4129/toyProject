@@ -1,8 +1,13 @@
 import asyncio
+import os
+import tempfile
+import traceback
 import redis.asyncio as redis
+import httpx
 from services.Processer import Processer
 from services.XLSXProcessor import XLSXProcessor
-from core.config import redis_settings
+from core.config import redis_settings, s3_config
+from services.s3_uploader import upload_xlsx
 import easyocr
 import time
 '''
@@ -62,18 +67,28 @@ async def consume():
 # stream_consumer.py
 async  def process_message(fields: dict):
 
-    # {'taskId': '"f7ddd661-d266-4570-a53c-9505879480b5"', 
-    # 'pdfType': '"XLSX"',
-    #  'filePath': '"C:\\\\Server\\\\PDF\\\\f7ddd661-d266-4570-a53c-9505879480b5.pdf"',
-    #  'originalFileName': '"test.pdf"'}
     print(f"process_message 진입: {fields}")
     task_id = fields["taskId"].strip('"')
     input_path = fields["inputPath"].strip('"')
     pdf_type = fields['pdfType']
 
-    
+    local_pdf_path = input_path
+    tmp_file_path = None
+
+    # presigned URL이면 HTTP로 다운로드해서 임시 파일로 저장
+    if input_path.startswith("http"):
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            tmp_file_path = tmp.name
+        async with httpx.AsyncClient() as client:
+            response = await client.get(input_path)
+            response.raise_for_status()
+            with open(tmp_file_path, "wb") as f:
+                f.write(response.content)
+        local_pdf_path = tmp_file_path
+        print(f"S3 다운로드 완료: {local_pdf_path}")
+
     try:
-        with Processer(input_path, task_id, reader=READER) as processer:
+        with Processer(local_pdf_path, task_id, reader=READER) as processer:
             metadata_list = processer.parse()
 
         with XLSXProcessor(metadata_list,task_id) as xlsx_processor:
@@ -81,33 +96,35 @@ async  def process_message(fields: dict):
             output_path = xlsx_processor.create_xlsx()
             
 
-        # 기존 코드 (하드코딩)
-        # await r.xadd("pdf:results", {})
-        
-        # pydantic-settings 적용
-        await r.xadd(redis_settings.stream_pdf_results, {
+        result_path = output_path
+        if s3_config.enabled:
+            result_path = upload_xlsx(output_path, s3_config)
+            print(f"S3 업로드 완료: {result_path}")
+
+        redis_payload = {
             "taskId": task_id,
-            "outputPath": output_path, ## 완료된 파일 경로
+            "outputPath": result_path,
             "status": "COMPLETED",
-            "inputPath": input_path  ## 원본 경로
-        
-        })
+            "inputPath": input_path,
+        }
+
+        await r.xadd(redis_settings.stream_pdf_results, redis_payload)
 
 
     except Exception as e:
-        # 예외를 반드시 여기서 잡아서 로그 출력
-        import traceback
         print(f"[ERROR] process_message 실패: {e}")
         traceback.print_exc()
         await r.xadd(redis_settings.stream_pdf_results, {
             "taskId": task_id,
-            "filePath": input_path,
+            "inputPath": input_path,
             "status": "FAILED",
-            "errorMessage":e
-        
+            "errorMessage": str(e)
         })
-        # await r.xadd("result:events", {
-        #     "taskId": taskId,
-        #     "status": "error",
-        #     "message": str(e)
-        # })
+    finally:
+        if tmp_file_path:
+            try:
+                os.remove(tmp_file_path)
+                print(f"{tmp_file_path} : 기존 서버에 있는 파일 삭제 ")
+
+            except OSError as e:
+                print(f"[WARN] 임시파일 삭제 실패: {e}")

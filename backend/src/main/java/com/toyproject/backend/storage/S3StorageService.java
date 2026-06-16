@@ -71,25 +71,30 @@ public class S3StorageService implements StorageService{
 
     @Override
     public void deleteFile(String filePath) {
-        s3Client.deleteObject(builder -> builder
-                .bucket(bucket)
-                .key(filePath)
-                .build()
-        );
-        log.info("파일삭제 => {}", filePath);
+        String path = java.net.URI.create(filePath).getPath();
+        String s3Key = path.startsWith("/" + bucket + "/")
+                ? path.substring(bucket.length() + 2)
+                : path.substring(1);
+        s3Client.deleteObject(b -> b.bucket(bucket).key(s3Key).build());
+        log.info("파일삭제 => {}", s3Key);
+    }
+
+    @Override
+    public String uploadResultFile(String outputPath) {
+        return outputPath.substring(outputPath.lastIndexOf("/") + 1);
     }
 
     @Override
     public PdfResponseDTO downloadFile(String fileName) {
-        String filePath = uploadPathPattern + fileName;
+        String s3Key = resultKeyPrefix + fileName;
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucket)
-                .key(filePath)
+                .key(s3Key)
                 .build();
         Resource resource = new InputStreamResource(s3Client.getObject(getObjectRequest));
         String encodedFilename = URLEncoder.encode(fileName, StandardCharsets.UTF_8);
-        log.info("파일다운로드=> {}",filePath);
-        return PdfResponseDTO.of(fileName, filePath, resource, encodedFilename);
+        log.info("파일다운로드 => {}", s3Key);
+        return PdfResponseDTO.of(fileName, s3Key, resource, encodedFilename);
     }
 
 
