@@ -9,3 +9,5 @@ openpyxl
 pandas
 reportlab
 pydantic-settings
+httpx
+boto3

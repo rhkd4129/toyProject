@@ -1,9 +1,6 @@
 package com.toyproject.backend.storage;
 
-import com.toyproject.backend.domain.pdf.dto.PdfRedisRequest;
 import com.toyproject.backend.domain.pdf.dto.PdfResponseDTO;
-import com.toyproject.backend.domain.pdf.service.PdfService;
-import com.toyproject.backend.utils.FileUploadResult;
 import com.toyproject.backend.utils.FileUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,11 +16,16 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
 @Service
-@Profile("prod")
+@Profile({"prod", "local-s3"})
+//@Profile("prod")
 @Slf4j
 @RequiredArgsConstructor
 public class S3StorageService implements StorageService{
@@ -39,13 +41,15 @@ public class S3StorageService implements StorageService{
     @Value("${cloud.aws.s3.key-prefix}")
     private  String uploadPathPattern;
 
+    @Value("${cloud.aws.s3.result-key-prefix}")
+    private String resultKeyPrefix;
+
+
 
     @Override
     public String uploadFile(MultipartFile file) throws IOException {
         String originalFilename = file.getOriginalFilename(); // "abc.pdf"
-//        String fileName = FileUtils.buildFileName(taskId,originalFilename);
         String filePath = uploadPathPattern+originalFilename;
-//        String key = uploadPathPattern + FileUtils.generateKey(originalFilename);
         s3Client.putObject(
                 PutObjectRequest.builder()
                         .bucket(bucket)          // 어느 S3 버킷에 저장할지 (버킷 = 최상위 폴더 개념)
@@ -64,13 +68,33 @@ public class S3StorageService implements StorageService{
 
     @Override
     public void deleteFile(String filePath) {
+        String path = java.net.URI.create(filePath).getPath();
+        String s3Key = path.startsWith("/" + bucket + "/")
+                ? path.substring(bucket.length() + 2)
+                : path.substring(1);
+        s3Client.deleteObject(b -> b.bucket(bucket).key(s3Key).build());
+        log.info("파일삭제 => {}", s3Key);
+    }
 
+    @Override
+    public String uploadResultFile(String outputPath) {
+        return outputPath.substring(outputPath.lastIndexOf("/") + 1);
     }
 
     @Override
     public PdfResponseDTO downloadFile(String fileName) {
-        return new PdfResponseDTO(fileName);
+        String s3Key = resultKeyPrefix + fileName;
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(s3Key)
+                .build();
+        Resource resource = new InputStreamResource(s3Client.getObject(getObjectRequest));
+        String encodedFilename = URLEncoder.encode(fileName, StandardCharsets.UTF_8);
+        log.info("파일다운로드 => {}", s3Key);
+        return PdfResponseDTO.of(fileName, s3Key, resource, encodedFilename);
     }
+
+
 
     private String generatePresignedUrl(String filePath) {
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
@@ -86,3 +110,9 @@ public class S3StorageService implements StorageService{
         return presignedRequest.url().toString();
     }
 }
+
+
+
+
+
+//}

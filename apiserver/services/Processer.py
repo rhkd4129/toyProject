@@ -21,23 +21,25 @@ class Processer:
 
     def _load_file(self):
         parsed = urlparse(self.file_path)
-        
+        path_lower = parsed.path.lower()
+        filetype = "tif" if path_lower.endswith((".tif", ".tiff")) else "pdf"
+
         # HTTP/HTTPS URL인 경우
         if parsed.scheme in ("http", "https"):
-            print("== prod env ==")
+            print(f"== prod env ({filetype}) ==")
             with requests.get(self.file_path) as download:
                 if download.status_code != 200:
                     raise HTTPException(...)
-                self.doc = fitz.open(stream=download.content, filetype="pdf")
-        
+                self.doc = fitz.open(stream=download.content, filetype=filetype)
+
         # 로컬 경로인 경우
         else:
             print("== local env ==")
             if not os.path.exists(self.file_path):
                 raise FileNotFoundError(f"파일 없음: {self.file_path}")
-            self.doc = fitz.open(self.file_path)  # fitz는 로컬 경로 직접 지원
+            self.doc = fitz.open(self.file_path)  # fitz는 확장자로 자동 감지
         self.total_pages = len(self.doc)
-        print("파일 로드 완료...")
+        print(f"파일 로드 완료... {self.file_path}")
 
 
     def _extract_page_number(self, results: list) -> tuple[int | None, int | None]:
@@ -131,7 +133,7 @@ class Processer:
     # def extract_and_save(self)      # 추출하고 저장
     # def parse_to_json(self)         # 파싱해서 json으로
     # def save_as_json(self)          # json으로 저장
-    def parse(self) -> None:
+    async def parse(self) -> None:
 
         print(f"총 {self.total_pages}페이지 감지됨\n")
 
@@ -140,9 +142,22 @@ class Processer:
         current_pages: list[int] = []
         current_amount: str | None = None  # 타채 금액 저장용
         i = 0
+        from consumers.stream_consumer import r
+        from core.config import redis_settings
 
         while i < self.total_pages:
             print(f"{i + 1}페이지 OCR 읽는 중...")
+
+            redis_payload = {
+                "taskId": self.key,
+                "status": "PROCESSING",
+                "totalPages":self.total_pages,
+                "currentPage":i+1
+            }
+
+            await r.xadd(redis_settings.stream_pdf_results,redis_payload)
+ 
+
             results = self._ocr_page(i)  # 전체 페이지 (쪽번호/이름/사건번호 추출용)
             current, total = self._extract_page_number(results)            
             if current == 1:
@@ -216,7 +231,7 @@ class Processer:
             return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        self.doc.close()
         # upload = requests.put(
         #     self.file_path,
         #     data=download.content,

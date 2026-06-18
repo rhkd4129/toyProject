@@ -8,20 +8,22 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PdfRedisRequest {
 
-    public PdfRedisRequest(String taskId, String filePath,String pdfType) {
+    public PdfRedisRequest(String taskId, String inputPath,String pdfType) {
         this.taskId = taskId;
-        this.filePath = filePath;
+        this.inputPath = inputPath;
         this.pdfType = pdfType;
     }
 
-    public static PdfRedisRequest to(String taskId,String filePath ,String pdfType){
-        return  new PdfRedisRequest(taskId,filePath, pdfType);
+    public static PdfRedisRequest to(String taskId,String inputPath ,String pdfType){
+        return  new PdfRedisRequest(taskId,inputPath, pdfType);
     }
 
     private String taskId;
     private String pdfType;
-    private String filePath;
-
+    private String inputPath;
+//    private String presignedDownloadUrl;
+//    private String presignedUploadUrl;
+//    private String resultDownloadUrl;
 
 
 }

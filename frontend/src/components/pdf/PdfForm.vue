@@ -169,8 +169,9 @@ watch(pdfErrorMessage, async(newVal, oldVal)  => {
                 <v-btn
                     color="primary"
                     type="submit"
-                    :disabled="!valid"
+
                 >등록</v-btn>
+                <!--                    :disabled="!valid"-->
 
                 <v-btn
                     color="grey"

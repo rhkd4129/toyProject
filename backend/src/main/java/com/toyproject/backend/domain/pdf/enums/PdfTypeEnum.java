@@ -1,4 +1,4 @@
-package com.toyproject.backend.domain.pdf.Enum;
+package com.toyproject.backend.domain.pdf.enums;
 
 import lombok.Getter;
 

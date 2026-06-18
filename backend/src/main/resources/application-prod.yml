@@ -70,5 +70,6 @@ cloud:
     s3:
       bucket: toyproject-lee
       key-prefix: pdf/
+      result-key-prefix: xlsx/
 
 

@@ -1,7 +1,7 @@
 package com.toyproject.backend.domain.post.repository;
 
 
-import com.toyproject.backend.domain.post.Enum.PostTypeEnum;
+import com.toyproject.backend.domain.post.enums.PostTypeEnum;
 import com.toyproject.backend.domain.post.entity.Post;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;

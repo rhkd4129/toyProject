@@ -1,7 +1,5 @@
 package com.toyproject.backend.storage;
-import com.toyproject.backend.domain.pdf.dto.PdfRedisRequest;
 import com.toyproject.backend.domain.pdf.dto.PdfResponseDTO;
-import com.toyproject.backend.utils.FileUploadResult;
 import com.toyproject.backend.utils.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +21,9 @@ import java.nio.file.Paths;
 
 
 @Service
-@Profile("local")
+@Profile("local & !local-s3")
+//@Profile("local")
+
 @Slf4j
 public class LocalStorageService implements StorageService{
 
@@ -55,10 +55,16 @@ public class LocalStorageService implements StorageService{
         Resource resource = null;
         String filePath = Paths.get(uploadPathPattern, fileName).toString();
         Path path = Paths.get(filePath);
+
         resource= new UrlResource(path.toUri());
         encodedFilename = URLEncoder.encode(fileName, StandardCharsets.UTF_8);
+        log.info("파일다운로드=> {}",filePath);
         return PdfResponseDTO.of(fileName,filePath,resource,encodedFilename);
+    }
 
+    @Override
+    public String uploadResultFile(String localFilePath) {
+        return Paths.get(localFilePath).getFileName().toString();
     }
 
     @Override

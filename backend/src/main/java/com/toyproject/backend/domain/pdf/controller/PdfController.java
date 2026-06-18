@@ -1,11 +1,11 @@
 package com.toyproject.backend.domain.pdf.controller;
 
 
-import com.toyproject.backend.Emitter.SseEmitterService;
+import com.toyproject.backend.emitter.SseEmitterService;
 import com.toyproject.backend.domain.pdf.dto.PdfRedisRequest;
 import com.toyproject.backend.domain.pdf.dto.PdfResponseDTO;
 import com.toyproject.backend.domain.pdf.service.PdfService;
-import com.toyproject.backend.utils.Result;
+import com.toyproject.backend.common.Result;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -36,7 +36,6 @@ public class PdfController {
 //    각 파트마다 Content-Type이 다를 수 있어서 이걸 구분해서 처리해줌
     @GetMapping("/create/id")
     public ResponseEntity<?> createPdfTaskId(){
-        log.info(" ============= createPdfTaskId 진입 ================");
         Result result   = new Result();
         String pdfTaskId = pdfService.createPdfTaskId();
         result.setData(pdfTaskId);
@@ -49,7 +48,6 @@ public class PdfController {
                                        @RequestPart("pdfTaskId") String pdfTaskId,
                                        @RequestPart("pdfType") String pdfType
                                        ) {
-        log.info(" ============= createPdf 진입 ================");
         Result result = new Result();
         PdfRedisRequest pdfRedisRequest = pdfService.createPdf(newPdf,pdfTaskId,pdfType);
         result.setData(pdfRedisRequest);
@@ -67,7 +65,6 @@ public class PdfController {
 
     @GetMapping("/download/{fileName}")
     public ResponseEntity<?> downloadPdf(@PathVariable String fileName) throws MalformedURLException {
-        log.info(" ============= downloadPdf 진입 ================");
         PdfResponseDTO pdfResponseDTO = pdfService.getPdf(fileName);
         String contentDisposition = "attachment; filename=\"" + pdfResponseDTO.getEncodedFilename() + "\"";
         return ResponseEntity.ok()
@@ -79,7 +76,6 @@ public class PdfController {
 
     @GetMapping(path = "/subscribe/{taskId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe(@PathVariable String taskId) {
-        log.info(" ============= subscribe 진입 ================");
         return sseEmitterService.subscribePdf(taskId);
 
 //        return sseEmitterService.getEmitter(taskId);

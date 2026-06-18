@@ -1,0 +1,154 @@
+================================================================
+전체 흐름
+================================================================
+  [local 프로파일]  ←→  FastAPI APP_ENV=dev
+  Vue → Spring → 로컬디스크 → Redis → FastAPI → 로컬디스크 → Redis → Spring → 로컬디스크 → Vue
+
+  [local-s3 / prod 프로파일]  ←→  FastAPI APP_ENV=local-s3 / prod
+  Vue → Spring → S3 → Redis → FastAPI → S3 → Redis → Spring → S3 → Vue
+================================================================
+[ Step 1 ]  파일 선택 시
+----------------------------------------------------------------
+① UUID 발급 요청
+   - 사용자가 파일 form에서 @onchange 이벤트 발생 시 backend에 요청
+   - Spring이 UUID(taskId)를 발급해서 반환
+   - Vue에 저장
+
+② SSE 구독 요청  (taskId 전달)
+   - Spring이 해당 taskId로 SSE 연결을 생성하고 등록
+   - Vue는 연결 확인 후 작업 완료 이벤트를 대기
+
+[ Step 2 ]  생성하기 버튼 클릭 시
+----------------------------------------------------------------
+PDF파일 + taskId를 Spring으로 전송
+
+  [local]  LocalStorageService:
+    1. PDF 파일을 로컬 디스크에 저장  (ex: C:\Server\PDF\{파일명})
+    2. taskId / 로컬경로 / pdfType을 Redis Stream(요청용)에 등록
+
+  [prod / local-s3]  S3StorageService:
+    1. PDF 파일을 S3에 업로드  (key: pdf/{원본파일명})
+    2. S3Presigner로 presigned GET URL 생성  (유효시간: 15분)
+    3. taskId / presignedUrl / pdfType을 Redis Stream(요청용)에 등록
+
+
+[ Step 3 ]  FastAPI  (consumers/stream_consumer.py)
+----------------------------------------------------------------
+- Redis Stream(요청용)을 상시 대기 (XREAD BLOCK)
+- 메시지 수신 시 process_message() 진입
+
+  inputPath 처리:
+    [local]  inputPath = 로컬 경로  (ex: C:\Server\PDF\{파일명})
+      - "http"로 시작하지 않음 → 로컬 디스크에서 직접 읽기
+      - local_pdf_path = inputPath 그대로 사용
+      - 임시 파일 없음
+
+    [prod]  inputPath = presigned URL  (ex: https://s3.amazonaws.com/...)
+      - "http"로 시작 감지 → HTTP 다운로드
+      - tempfile.NamedTemporaryFile로 임시 파일 생성
+      - httpx.AsyncClient로 GET 요청 → PDF 다운로드
+      - 임시 파일에 저장  (ex: C:\Users\...\AppData\Local\Temp\tmp*.pdf)
+      - local_pdf_path = 임시 파일 경로
+
+  처리:
+    ...
+    with XLSXProcessor(metadata_list, ...) as xlsx_processor:
+        xlsx_processor.find_number()
+        output_path = xlsx_processor.create_xlsx()
+        # XLSX를 로컬 경로에 저장  (ex: C:\Server\PDF\{taskId}.xlsx)
+
+  결과 전송:
+    S3_ENABLED=false (기본):
+      outputPath = 로컬 XLSX 경로  (ex: C:\Server\PDF\{taskId}.xlsx)
+
+    S3_ENABLED=true
+      XLSX를 boto3로 S3에 직접 업로드
+      outputPath = S3 key  (ex: xlsx/{taskId}.xlsx)
+
+    Redis Stream(결과용)에 등록
+      - taskId / outputPath / status: COMPLETED / inputPath
+
+  실패 시:
+    Redis Stream(결과용)에 등록
+      - taskId / inputPath / status: FAILED / errorMessage
+
+  finally 블록:  (성공/실패 상관없이 항상 실행)
+    tmp_file_path가 있으면 os.remove(tmp_file_path)
+    → 임시 PDF 삭제  (doc.close() 덕분에 잠금 해제 후 삭제 가능)
+
+
+[ Step 4 ]  Spring 결과 수신  (PdfResultConsumer.java)
+----------------------------------------------------------------
+- 앱 시작 시 Redis Stream(결과용) 구독 시작
+- 메시지 수신 시
+
+  status == COMPLETED:
+    1. storageService.uploadResultFile(outputPath) 호출
+       (S3 업로드는 항상 FastAPI가 담당 → Spring은 파일명 추출만)
+    2. pdfService.completePdf(taskId)
+    3. sseEmitterService.sendEvent(taskId, resultFileName, "COMPLETED")
+       → Vue에 파일명 전달
+    4. storageService.deleteFile(inputPath)
+       → presigned URL에서 S3 key 파싱 후 S3 원본 PDF 삭제
+          (virtual-hosted style: /{key}  |  path-style: /{bucket}/{key})
+  status == FAILED:
+    pdfService.failPdf(taskId);
+    원본 PDF 삭제
+
+
+
+[ Step 5 ]  Vue 다운로드
+----------------------------------------------------------------
+- 작업 완료 이벤트 수신  (SSE)
+  → resultFileName을 store에 저장
+  → SSE 연결 종료
+
+- store 변경을 watch가 감지
+  → resultFileName으로 파일 다운로드 요청
+
+  [local]  LocalStorageService.downloadFile(fileName)
+    → 로컬 디스크에서 직접 읽기  (C:\Server\PDF\{파일명})
+    → UrlResource로 Blob 반환
+
+  [prod]  S3StorageService.downloadFile(fileName)
+    → S3에서 읽기  (key: xlsx/{파일명})
+    → InputStreamResource로 Blob 반환
+
+  → 브라우저 자동 다운로드 후 메모리 해제
+
+================================================================
+Redis Stream 역할
+================================================================
+  Stream 요청용  pdf:events   :  Spring  →  FastAPI   작업 요청
+  Stream 결과용  pdf:results  :  FastAPI →  Spring    작업 결과 전달
+
+  필드 구성:
+    요청용: taskId / inputPath(presigned URL) / pdfType
+    결과용: taskId / outputPath(로컬경로 or S3 key) / status / inputPath / errorMessage
+
+  outputPath 값 형태:
+    S3_ENABLED=false  →  C:\Server\PDF\{taskId}.xlsx   (로컬 경로)
+    S3_ENABLED=true   →  xlsx/{taskId}.xlsx             (S3 key)
+
+
+====================================================================================
+
+    현재:  FastAPI → (완료) → Redis Stream(결과)
+    변경:  FastAPI → (20%) → Redis Stream(결과)
+                   → (50%) → Redis Stream(결과)
+                   → (80%) → Redis Stream(결과)
+                   → (완료) → Redis Stream(결과)
+
+    ---
+
+
+    FastAPI
+    PDF 파싱 → 데이터 추출 → XLSX 생성의 각 단계가 끝날 때마다 Stream에 status: PROGRESS, percent: 30 같은 메시지
+
+    Spring(PdfResultConsumer) 쪽
+    지금은 COMPLETED / FAILED만 처리하는데, PROGRESS 상태도 추가로 분기해서 SSE로 Vue에 그냥 중계. DB는 건드릴 필요 x
+
+    Vue 쪽
+    SSE 이벤트 리스너에서 PROGRESS 메시지를 받으면 진행률 상태값을 업데이트하고, 화면에 프로그레스 바
+
+

@@ -1,0 +1,29 @@
+ AWS SDK DefaultCredentialsProvider 체인
+
+  지금 S3Config에서 credentialsProvider를 명시 안 하면 SDK가 자동으로 아래 순서로 인증을 시도
+
+  1. 환경변수       AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+  2. Java 시스템 프로퍼티  aws.accessKeyId / aws.secretAccessKey
+  3. ~/.aws/credentials 파일
+  4. ECS 컨테이너 자격증명
+  5. EC2 IMDS (IAM Role)   ← prod EC2에서 여기가 성공
+
+  로컬에서는 5번에서 IMDS 접근이 실패하기 전에 3번 ~/.aws/credentials 에서 이미 찾으면 거기서 멈춤
+
+  ---
+  로컬 S3 테스트 방법 (코드 변경 없음)
+
+  AWS CLI 설치 후 한 번 인증 하면
+  그러면 C:\Users\rhkd4\.aws\credentials 파일이 생기고, SDK가 자동으로 read  @Value나 StaticCredentialsProvider 코드는 추가 안해도됨
+
+  ---
+  이전에 에러났던 이유 복기
+  이전 방식이 문제였던 건:
+
+  // StaticCredentialsProvider로 명시적으로 설정
+  S3Client.builder().credentialsProvider(StaticCredentialsProvider.create(...))
+
+  // 그런데 SDK 내부 백그라운드 스레드가 DefaultCredentialsProvider도 별도 실행
+  // → 로컬이 아닌 EC2에서: IMDS 조회 실패 에러 발생
+
+  체인 전체를 SDK에 맡기면 환경마다 알아서 동작

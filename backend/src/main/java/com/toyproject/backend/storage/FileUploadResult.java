@@ -1,3 +1,3 @@
-package com.toyproject.backend.utils;
+package com.toyproject.backend.storage;
 
 public record FileUploadResult(String path, String key) {}

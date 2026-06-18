@@ -24,21 +24,19 @@ public class PostController {
     // 목록 조회
     @GetMapping("/list")
     public ResponseEntity<List<PostResponseDto>> getPosts() {
-        log.info("==== getPosts 진입 ==== ");
         return new ResponseEntity<>(postService.getPosts(), HttpStatus.OK);
     }
 
 //    // 단건 조회
     @GetMapping("/list/{id}")
     public ResponseEntity<PostResponseDto> getPost(@PathVariable(name = "id") Long id) {
-        log.info("==== getPost 진입 ==== ");
         return new ResponseEntity<>(postService.getPost(id), HttpStatus.OK);
     }
 
     // 작성
     @PostMapping("/create")
     public ResponseEntity<Void> createPost(@Valid @RequestBody PostRequestDto dto) {
-        log.info("==== createPost 진입 ==== ");
+
         System.out.println(dto.getTitle());
         postService.createPost(dto);
         return new ResponseEntity<>(HttpStatus.CREATED);
@@ -46,11 +44,7 @@ public class PostController {
 //
     // 수정
     @PutMapping("/{id}")
-    public ResponseEntity<Void> updatePost(
-            @PathVariable(name = "id") Long id,
-            @Valid @RequestBody PostRequestDto dto
-    ) {
-        log.info("==== updatePost 진입 ==== ");
+    public ResponseEntity<Void> updatePost(@PathVariable(name = "id") Long id, @Valid @RequestBody PostRequestDto dto) {
         postService.updatePost(id, dto);
         return new ResponseEntity<>(HttpStatus.OK);
     }
