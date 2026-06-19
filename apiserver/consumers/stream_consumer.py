@@ -43,7 +43,7 @@ async def consume():
             )
         except Exception as e:
             print(f"Redis 연결 오류: {e}")
-            last_id = msg_id  # 다음엔 이 이후부터 읽기
+            # last_id = msg_id  # 다음엔 이 이후부터 읽기
             await asyncio.sleep(5)  # 재연결 대기
             continue
 
