@@ -39,6 +39,7 @@ services:
     restart: always
     environment:
       REDIS_HOST: redis-db
+      APP_ENV: prod
     volumes:
       - /home/ec2-user/pdf:/app/pdf
 
