@@ -3,7 +3,7 @@ server:
   port: 8085
 
 fastapi:
-  url: http://apiserver:8084
+  url: http://api-server:8084
 
 sse:
   event:
