@@ -17,7 +17,7 @@ jobs:
 
       - name: 이미지 빌드 & 푸시
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/api-server:latest ./apiserver
+          docker build --no-cache -t ${{ secrets.DOCKER_USERNAME }}/api-server:latest ./apiserver
           docker push ${{ secrets.DOCKER_USERNAME }}/api-server:latest
 
       - name: EC2에서 pull & 실행
@@ -28,6 +28,6 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           script: |
-            docker compose pull api-server
+            docker pull ${{ secrets.DOCKER_USERNAME }}/api-server:latest
             docker compose up -d --force-recreate api-server
           #  --force-recreate는 "이미 실행 중이어도 강제로 컨테이너를 지우고 새로 만들어라" 라는 플래그
