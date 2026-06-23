@@ -33,8 +33,8 @@ jobs:
             # EC2 IAM Role 적용으로 액세스 키 불필요 → 제거
             # echo "CLOUD_AWS_CREDENTIALS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY_ID }}" > .env
             # echo "CLOUD_AWS_CREDENTIALS_SECRET_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
-            docker compose pull
-            docker compose up -d
+            docker compose pull backend
+            docker compose up -d --force-recreate backend
             
 
       # 빌드된 jar 파일을 EC2로 전송

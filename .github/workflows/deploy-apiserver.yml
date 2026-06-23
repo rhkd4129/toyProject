@@ -28,5 +28,6 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           script: |
-            docker compose pull
-            docker compose up -d
+            docker compose pull api-server
+            docker compose up -d --force-recreate api-server
+          #  --force-recreate는 "이미 실행 중이어도 강제로 컨테이너를 지우고 새로 만들어라" 라는 플래그

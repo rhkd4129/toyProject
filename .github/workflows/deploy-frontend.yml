@@ -32,8 +32,8 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           script: |
-            docker compose pull
-            docker compose up -d
+            docker compose pull frontend
+            docker compose up -d --force-recreate frontend
             
 
 #
