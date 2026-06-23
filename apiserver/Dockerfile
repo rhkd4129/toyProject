@@ -12,10 +12,10 @@ RUN pip install --no-cache-dir torch torchvision \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
-
-# 모델 미리 다운로드
+# requirements 변경 없으면 모델 캐시 재사용 (COPY . . 앞에 위치)
 RUN python -c "import easyocr; easyocr.Reader(['ko', 'en'])"
+
+COPY . .
 
 ENV APP_ENV=prod
 
