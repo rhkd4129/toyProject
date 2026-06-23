@@ -35,7 +35,7 @@ spring:
       host: redis-db
       port: 6379
       database: 0
-      timeout: 3000
+      timeout: 30000
       client-type: lettuce
       lettuce:
         pool:

@@ -46,7 +46,8 @@ public class RedisConfig {
         StreamMessageListenerContainer.StreamMessageListenerContainerOptions<String, MapRecord<String, String, String>> options =
                 StreamMessageListenerContainer.StreamMessageListenerContainerOptions
                         .builder()
-                        .pollTimeout(Duration.ofMillis(100))  // 100ms마다 폴링
+                        .pollTimeout(Duration.ofSeconds(2))
+                        .errorHandler(t -> {})  // 에러 발생해도 polling 중단하지 않음
                         .build();
 
         return StreamMessageListenerContainer.create(factory, options);
