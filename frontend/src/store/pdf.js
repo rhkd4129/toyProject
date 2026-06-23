@@ -1,6 +1,4 @@
 import {conEmitter, createPdf, createPdfTaskId, downloadPdf, updateMetadata} from "@api";
-import {standardEasing} from "vuetify/lib/util/index.d.ts";
-
 
 const pdfStore={
     namespaced :true,

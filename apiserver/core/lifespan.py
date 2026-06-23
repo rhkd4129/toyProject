@@ -23,7 +23,7 @@ import easyocr
 #with 문을 async 함수로 만들어주는 데코레이터
 #yield 기준으로 앞/뒤
 async def lifespan(app):
-      print(f"################## redis start ##################")
+      print(f"################ redis start ################ ")
       print(f"[환경] APP_ENV = {ENV}")
       print(f"[Redis] {redis_settings.host}:{redis_settings.port}")
 
